@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { createAdminClient } from '../supabase/client';
 
 class RedisSingleton {
   private static instance: Redis | null = null;
@@ -15,33 +16,42 @@ class RedisSingleton {
   }
 
   // Get all print jobs for a user
-  public static async getJobs(userId: string): Promise<any[]> {
+  public static async getJobs(accountId: string): Promise<any[]> {
     const redis = RedisSingleton.getInstance();
-    const jobs = await redis.lrange(`print_jobs:${userId}`, 0, -1); // Get all jobs from the list
+    const jobs = await redis.lrange(`print_jobs:${accountId}`, 0, -1); // Get all jobs from the list
     return jobs.map((job) => JSON.parse(job)); // Parse each job from JSON
   }
 
   // Remove a specific job after it has been printed (optional, based on job ID or matching condition)
   public static async removeJob(
-    userId: string,
-    jobToRemove: any
+    accountId: string,
+    jobToRemove: any,
+    recordId: string
   ): Promise<void> {
-    const redis = RedisSingleton.getInstance();
-    await redis.lrem(`print_jobs:${userId}`, 1, JSON.stringify(jobToRemove)); // Remove one instance of the job from the list
+
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from('kiln_requests') // Replace with your table name
+      .update({ printed: true }) // Update the 'printed' column to true
+      .eq('id', recordId); // Match the record by its ID
+
+    if (!error) {
+      console.log('successfully marked as printed on supabase')
+      const redis = RedisSingleton.getInstance();
+      await redis.lrem(`print_jobs:${accountId}`, 1, JSON.stringify(jobToRemove)); // Remove one instance of the job from the list
+      console.log('successfully removed from queue')
+    }
   }
 
   //   Add a new print job to the user's list of jobs
-  public static async addJob(userId: string, job: any): Promise<number> {
+  public static async addJob(accountId: string, job: any): Promise<number> {
     const redis = RedisSingleton.getInstance();
-    const result = await redis.rpush(`print_jobs:${userId}`, JSON.stringify(job)); // Add job to the end of the list
-	return result
+    const result = await redis.rpush(
+      `print_jobs:${accountId}`,
+      JSON.stringify(job)
+    ); // Add job to the end of the list
+    return result;
   }
-
-  // Clear all jobs for a user (after all jobs are printed, for example)
-  //   public static async clearJobs(userId: string): Promise<void> {
-  //     const redis = RedisSingleton.getInstance();
-  //     await redis.del(`print_jobs:${userId}`);  // Delete the entire list
-  //   }
 }
 
 export default RedisSingleton;
