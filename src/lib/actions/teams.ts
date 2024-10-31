@@ -163,5 +163,5 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
     };
   }
 
-  redirect(`/qrform/${slug}/after-form`);
+  redirect(`/qrform/${slug}/after-form?accountId=${accountId}`);
 }
