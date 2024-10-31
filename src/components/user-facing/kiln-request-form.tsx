@@ -1,7 +1,8 @@
 'use client';
 
+import { createClient } from '@/lib/supabase/client';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useId, useRef, useState, useEffect } from 'react';
 import { Label } from '../ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,7 +23,8 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
-
+import { Button } from '../ui/button';
+import { Upload, Loader2, X } from 'lucide-react';
 interface Metadata {
   opt_in: {
     required: boolean;
@@ -37,8 +39,10 @@ interface FormProps {
 }
 
 export default function KilnRequestForm({ metadata }: FormProps) {
+  const supabase = createClient();
   const { accountSlug } = useParams();
   const searchParams = useSearchParams();
+  const id = useId();
   const [accountId, setAccountId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,6 +65,9 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [cost, setCost] = useState(0);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  // const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState('');
 
   useEffect(() => {
     const baseCost = length * width * height;
@@ -71,12 +78,58 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   }, [length, width, height, quantity, nonMember, metadata]);
 
   const handleOptInChecked = (checked: boolean) => {
-    setOptIn(checked)
-  }
+    setOptIn(checked);
+  };
 
   const handleNonMemberChecked = (checked: boolean) => {
-    setNonMember(checked)
-  }
+    setNonMember(checked);
+  };
+
+  // const handleFileChange = (event) => {
+  //   const selectedFile = event.target.files[0];
+  //   setFile(selectedFile);
+  // };
+
+  const handleUpload = async (file) => {
+    if (!file) return;
+
+    setUploading(true);
+    const fileName = `${accountId}_${firstName}_${lastName}-${file.name}`; // Create a unique filename
+    console.log(fileName);
+    const { data, error } = await supabase.storage
+      .from('photos') // replace 'photos' with your bucket name
+      .upload(fileName, file);
+    // .select()
+    console.log('after upload', data);
+    if (data.fullPath) {
+      setPhotoUrl(process.env.NEXT_PUBLIC_PUBLIC_S3_URL! + data.fullPath);
+      setUploaded(data.path);
+    }
+    setUploading(false);
+
+    if (error) {
+      console.error('Error uploading file:', error.message);
+    } else {
+      console.log('File uploaded successfully:', data);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!uploaded) return;
+    let { data, error } = await supabase.storage
+      .from('photos')
+      .remove([uploaded]);
+
+    if (error) {
+      console.error('Error deleting file:', error.message);
+    } else {
+      if (data[0]['name'] == uploaded) {
+        setUploaded('');
+        setPhotoUrl('');
+      }
+      console.log('File deleted successfully:', data);
+    }
+  };
 
   return (
     <Card>
@@ -85,11 +138,9 @@ export default function KilnRequestForm({ metadata }: FormProps) {
         <CardDescription>Kiln Request Form</CardDescription>
       </CardHeader>
       {message && <p>{message}</p>}
-      <form
-        className='animate-in flex-1 text-foreground'
-      >
+      <form className='animate-in flex-1 text-foreground'>
         <input type='hidden' name='slug' value={accountSlug} />
-        <input type='hidden' name='accountId' value={accountId || ""} />
+        <input type='hidden' name='accountId' value={accountId || ''} />
         <CardContent className='flex flex-col gap-y-6'>
           <div className='flex flex-col items-start gap-y-4'>
             <Label htmlFor='first_name'>First Name</Label>
@@ -204,15 +255,56 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                 onCheckedChange={handleNonMemberChecked}
               />
             </div>
-
-            <Label htmlFor='photo_url'>Photo URL</Label>
-            <Input
-              type='text'
-              id='photo_url'
-              name='photo_url'
-              value={photoUrl}
-              onChange={(e) => setPhotoUrl(e.target.value)}
-            />
+            <div>
+              {/* <Label htmlFor='photo_url'>Photo</Label> */}
+              <Input
+                type='hidden'
+                id='photo_url'
+                name='photo_url'
+                value={photoUrl}
+                // onChange={(e) => setPhotoUrl(e.target.value)}
+              />
+              <Button disabled={uploading} className='relative' type='button'>
+                <label htmlFor={id} className='absolute inset-0 cursor-pointer'>
+                  <input
+                    id={id}
+                    className='absolute inset-0 size-0 opacity-0'
+                    type='file'
+                    accept='image/*'
+                    capture='environment'
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) {
+                        handleUpload(e.target.files[0]);
+                      }
+                    }}
+                  />
+                </label>
+                {uploading ? (
+                  <>
+                    <Loader2 className='mr-2 size-4' />
+                    Upload Photo
+                  </>
+                ) : (
+                  <>
+                    <Upload className='mr-2 size-4' />
+                    Upload Photo
+                  </>
+                )}
+              </Button>
+              {uploaded && photoUrl && (
+                <div className='max-w-[60%] h-auto relative self-center'>
+                  <X
+                    className='absolute top-0 right-0 cursor-pointer'
+                    onClick={handleDelete}
+                  />
+                  <img
+                    src={photoUrl}
+                    alt={uploaded}
+                    className='w-auto h-auto'
+                  />
+                </div>
+              )}
+            </div>
 
             <Label htmlFor='cost'>Cost</Label>
             <Input type='number' id='cost' name='cost' value={cost} readOnly />

@@ -13,17 +13,19 @@
     "@radix-ui/react-popover": "^1.0.7",
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-separator": "^1.0.3",
-    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-slot": "^1.1.0",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "@tanstack/react-table": "^8.20.5",
     "@usebasejump/shared": "^0.0.3",
     "autoprefixer": "10.4.17",
+    "bull": "^4.16.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cmdk": "^0.2.0",
     "date-fns": "^3.6.0",
     "geist": "^1.2.1",
+    "ioredis": "^5.4.1",
     "lucide-react": "^0.368.0",
     "next": "latest",
     "next-themes": "^0.3.0",
@@ -34,12 +36,15 @@
     "tailwind-merge": "^2.2.2",
     "tailwindcss": "3.4.1",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "5.3.3"
+    "typescript": "5.3.3",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
+    "@types/bull": "^3.15.9",
     "@types/node": "20.11.5",
     "@types/react": "18.2.48",
     "@types/react-dom": "18.2.18",
+    "@types/xml2js": "^0.4.14",
     "encoding": "^0.1.13"
   }
 }
