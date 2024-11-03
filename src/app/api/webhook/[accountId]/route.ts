@@ -75,7 +75,11 @@ export async function POST(
   }
 }
 
-async function convertImageToCustomFormat(url, widthScale, mode='gray16') {
+async function convertImageToCustomFormat(
+  url: string,
+  widthScale: number,
+  mode = 'gray16'
+) {
   const response = await fetch(url);
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
@@ -85,9 +89,9 @@ async function convertImageToCustomFormat(url, widthScale, mode='gray16') {
   let { width, height } = metadata;
 
   //compensate for rotation
-  let temp = width
-  width = height
-  height = temp
+  let temp = width;
+  width = height;
+  height = temp;
 
   console.log(`Original dimensions: width=${width}, height=${height}`);
 
@@ -99,7 +103,7 @@ async function convertImageToCustomFormat(url, widthScale, mode='gray16') {
 
     console.log(`Resized dimensions: width=${width}, height=${height}`);
 
-    image.resize(width, height, { fit: 'contain' })
+    image.resize(width, height, { fit: 'contain' });
   }
 
   // Step 2: Process the image based on mode
@@ -157,10 +161,7 @@ async function convertTo1BitPerPixel(image, width, height) {
 
 // Helper function to convert image to 4-bit per pixel (gray16)
 async function convertTo4BitPerPixel(image, width, height) {
-  const data = await image
-    .greyscale()
-    .raw()
-    .toBuffer();
+  const data = await image.greyscale().raw().toBuffer();
 
   const byteArray = [];
   for (let y = 0; y < height; y++) {
@@ -192,36 +193,6 @@ async function convertTo4BitPerPixel(image, width, height) {
   }
   return byteArray;
 }
-// async function convertImageToCustomFormat(url: string, widthScale: number) {
-//   const response = await fetch(url);
-//   const arrayBuffer = await response.arrayBuffer(); // Get the image as an array buffer
-//   const buffer = Buffer.from(arrayBuffer); // Convert array buffer to buffer
-
-//   // Step 1: Read the image's original dimensions using sharp
-//   const image = sharp(buffer);
-//   const metadata = await image.metadata();
-//   let { width, height } = metadata;
-
-//   // Step 2: Scale down if width is greater than 240
-//   if (width > widthScale) {
-//     const scaleFactor = widthScale / width;
-//     width = widthScale;
-//     height = Math.round(height * scaleFactor);
-
-//     // Resize the image with sharp
-//     const resizedImageBuffer = await image.resize(width, height).toBuffer();
-
-//     // Step 3: Convert the resized image buffer to base64
-//     const base64Data = resizedImageBuffer.toString('base64');
-
-//     // Build the custom image tag format with the resized data
-//     return `<image width="${width}" height="${height}" color="color_1" mode="mono">${base64Data}</image>`;
-//   } else {
-//     // If no resizing is needed, just convert the original image to base64
-//     const base64Data = buffer.toString('base64');
-//     return `<image width="${width}" height="${height}" color="color_1" mode="mono">${base64Data}</image>`;
-//   }
-// }
 
 async function generateEposXML(data: any) {
   let xml = `<?xml version="1.0" encoding="utf-8"?>
@@ -242,9 +213,7 @@ async function generateEposXML(data: any) {
       <text reverse="false" ul="true" em="false" color="color_1"/>
       <text>Date:</text>
       <text reverse="false" ul="false" em="false" color="color_1"/>
-      <text> ${
-        new Date(data.created_at).toLocaleString()
-      }&#10;</text>
+      <text> ${new Date(data.created_at).toLocaleString()}&#10;</text>
       <text reverse="false" ul="true" em="false" color="color_1"/>
       <text>Name:</text>
       <text reverse="false" ul="false" em="false" color="color_1"/>
@@ -284,12 +253,3 @@ async function generateEposXML(data: any) {
 
   return xml;
 }
-
-// ${
-//   (data.non_member != null) &&
-// `
-// <text reverse="false" ul="true" em="false" color="color_1"/>
-// <text>Non-Member?:</text>
-// <text reverse="false" ul="false" em="false" color="color_1"/>
-// <text> ${data.non_member ? 'True' : 'False'}&#10;</text>`
-// }

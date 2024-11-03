@@ -138,7 +138,7 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   const supabase = createClient();
 
   const { data, error } = await supabase
-    .from('kiln_requests') // Replace with your table name
+    .from('kiln_requests')
     .insert([
       {
         account_id: accountId,
@@ -172,7 +172,7 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
     } else {
       console.log('could not add to redis')
     }
-    console.log('AFTER SUBMIT', data)
-    redirect(`/qrform/${slug}/after-form?accountId=${accountId}`);
+    // console.log('AFTER SUBMIT', data)
+    redirect(`/qrform/${slug}/after-form?accountId=${accountId}&recordId=${record.id}`);
   }
 }

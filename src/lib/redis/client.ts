@@ -28,7 +28,6 @@ class RedisSingleton {
     jobToRemove: any,
     recordId: string
   ): Promise<void> {
-
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('kiln_requests') // Replace with your table name
@@ -36,10 +35,14 @@ class RedisSingleton {
       .eq('id', recordId); // Match the record by its ID
 
     if (!error) {
-      console.log('successfully marked as printed on supabase')
+      console.log('successfully marked as printed on supabase');
       const redis = RedisSingleton.getInstance();
-      await redis.lrem(`print_jobs:${accountId}`, 1, JSON.stringify(jobToRemove)); // Remove one instance of the job from the list
-      console.log('successfully removed from queue')
+      await redis.lrem(
+        `print_jobs:${accountId}`,
+        1,
+        JSON.stringify(jobToRemove)
+      ); // Remove one instance of the job from the list
+      console.log('successfully removed from queue');
     }
   }
 
@@ -51,6 +54,17 @@ class RedisSingleton {
       JSON.stringify(job)
     ); // Add job to the end of the list
     return result;
+  }
+
+  public static async jobExists(
+    accountId: string,
+    newJob: any
+  ): Promise<boolean> {
+    const existingJobs = await RedisSingleton.getJobs(accountId);
+
+    return existingJobs.some(
+      (job) => JSON.stringify(job) === JSON.stringify(newJob)
+    );
   }
 }
 
