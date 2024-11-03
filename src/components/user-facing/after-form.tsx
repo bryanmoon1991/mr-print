@@ -47,7 +47,6 @@ type Record = {
   email: string | null;
 };
 
-
 export default function AfterForm() {
   const { accountSlug } = useParams();
   const searchParams = useSearchParams();
@@ -115,18 +114,39 @@ export default function AfterForm() {
             <>
               <p>Just Printed:</p>
               <ul>
-                <li><strong>Name:</strong> {record.first_name + " " + record.last_name}</li>
-                <li><strong>Date:</strong> {new Date(record.created_at).toLocaleString()}</li>
-                <li><strong>Dimensions:</strong> {record.length + "in x " + record.width + "in x " + record.height + "in"}</li>
-                <li><strong>Quantity:</strong> {record.quantity}</li>
-                <li><strong>Cost:</strong> {record.cost}</li>
-                {record.photo_url && <li><strong>Photo:</strong> 
-                  <img src={record.photo_url} alt="image of student piece"/>
-                </li>}
+                <li>
+                  <strong>Name:</strong>{' '}
+                  {record.first_name + ' ' + record.last_name}
+                </li>
+                <li>
+                  <strong>Date:</strong>{' '}
+                  {new Date(record.created_at).toLocaleString()}
+                </li>
+                <li>
+                  <strong>Dimensions:</strong>{' '}
+                  {record.length +
+                    'in x ' +
+                    record.width +
+                    'in x ' +
+                    record.height +
+                    'in'}
+                </li>
+                <li>
+                  <strong>Quantity:</strong> {record.quantity}
+                </li>
+                <li>
+                  <strong>Cost:</strong> {record.cost}
+                </li>
+                {record.photo_url && (
+                  <li>
+                    <strong>Photo:</strong>
+                    <img src={record.photo_url} alt='image of student piece' />
+                  </li>
+                )}
               </ul>
             </>
           ) : (
-            <Loader2 />
+            <Loader2 className='mr-2 size-4 animate-spin' />
           )}
         </CardContent>
         <CardFooter className='gap-2'>
@@ -141,17 +161,17 @@ export default function AfterForm() {
           <DialogHeader>
             <DialogTitle>Hold up!</DialogTitle>
             <DialogDescription>
-                We noticed a duplicate request waiting to be printed. If you
-                havent received your receipt, please check the printer for:
-              <br/>
-              <br/>
+              We noticed a duplicate request waiting to be printed. If you
+              havent received your receipt, please check the printer for:
+              <br />
+              <br />
               <li>power</li>
               <li>wifi</li>
               <li>paper</li>
-              <br/>
-                If the printer seems to be in working order and requests are
-                still not going through, please notify the manager onsite and
-                we'll work to get this issue resolved asap!
+              <br />
+              If the printer seems to be in working order and requests are still
+              not going through, please notify the manager onsite and we'll work
+              to get this issue resolved asap!
             </DialogDescription>
           </DialogHeader>
         </DialogContent>

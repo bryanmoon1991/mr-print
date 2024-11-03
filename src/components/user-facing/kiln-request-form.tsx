@@ -282,7 +282,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                   </label>
                   {uploading ? (
                     <>
-                      <Loader2 className='mr-2 size-4' />
+                      <Loader2 className='mr-2 size-4 animate-spin' />
                       Upload Photo
                     </>
                   ) : (
