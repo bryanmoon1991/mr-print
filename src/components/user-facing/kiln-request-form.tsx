@@ -24,7 +24,9 @@ import {
   CardTitle,
 } from '../ui/card';
 import { Button } from '../ui/button';
-import { Upload, Loader2, X } from 'lucide-react';
+import { Upload, Loader2, X, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 interface Metadata {
   opt_in: {
     required: boolean;
@@ -63,9 +65,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [firingType, setFiringType] = useState(metadata.firing_types[0]);
   const [photoUrl, setPhotoUrl] = useState('');
   const [cost, setCost] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  // const [file, setFile] = useState(null);
+  const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState('');
 
@@ -85,33 +85,29 @@ export default function KilnRequestForm({ metadata }: FormProps) {
     setNonMember(checked);
   };
 
-  // const handleFileChange = (event) => {
-  //   const selectedFile = event.target.files[0];
-  //   setFile(selectedFile);
-  // };
-
   const handleUpload = async (file) => {
     if (!file) return;
 
     setUploading(true);
+    setError('');
     const fileName = `${accountId}_${firstName}_${lastName}-${file.name}`; // Create a unique filename
     console.log(fileName);
     const { data, error } = await supabase.storage
       .from('photos') // replace 'photos' with your bucket name
       .upload(fileName, file);
-    // .select()
-    console.log('after upload', data);
-    if (data.fullPath) {
-      setPhotoUrl(process.env.NEXT_PUBLIC_PUBLIC_S3_URL! + data.fullPath);
-      setUploaded(data.path);
-    }
-    setUploading(false);
 
     if (error) {
+      setError(error.message);
       console.error('Error uploading file:', error.message);
     } else {
+      console.log('after upload', data);
+      if (data.fullPath) {
+        setPhotoUrl(process.env.NEXT_PUBLIC_PUBLIC_S3_URL! + data.fullPath);
+        setUploaded(data.path);
+      }
       console.log('File uploaded successfully:', data);
     }
+    setUploading(false);
   };
 
   const handleDelete = async () => {
@@ -121,11 +117,13 @@ export default function KilnRequestForm({ metadata }: FormProps) {
       .remove([uploaded]);
 
     if (error) {
+      setError(error.message);
       console.error('Error deleting file:', error.message);
     } else {
       if (data[0]['name'] == uploaded) {
         setUploaded('');
         setPhotoUrl('');
+        setError('');
       }
       console.log('File deleted successfully:', data);
     }
@@ -137,7 +135,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
         <CardTitle>Fire a Piece!</CardTitle>
         <CardDescription>Kiln Request Form</CardDescription>
       </CardHeader>
-      {message && <p>{message}</p>}
+      {/* {message && <p>{message}</p>} */}
       <form className='animate-in flex-1 text-foreground'>
         <input type='hidden' name='slug' value={accountSlug} />
         <input type='hidden' name='accountId' value={accountId || ''} />
@@ -264,53 +262,63 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                 value={photoUrl}
                 // onChange={(e) => setPhotoUrl(e.target.value)}
               />
-              <Button disabled={uploading} className='relative' type='button'>
-                <label htmlFor={id} className='absolute inset-0 cursor-pointer'>
-                  <input
-                    id={id}
-                    className='absolute inset-0 size-0 opacity-0'
-                    type='file'
-                    accept='image/*'
-                    capture='environment'
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        handleUpload(e.target.files[0]);
-                      }
-                    }}
-                  />
-                </label>
-                {uploading ? (
-                  <>
-                    <Loader2 className='mr-2 size-4' />
-                    Upload Photo
-                  </>
-                ) : (
-                  <>
-                    <Upload className='mr-2 size-4' />
-                    Upload Photo
-                  </>
+                <Button disabled={uploading} className='relative mb-4' type='button'>
+                  <label
+                    htmlFor={id}
+                    className='absolute inset-0 cursor-pointer'
+                  >
+                    <input
+                      id={id}
+                      className='absolute inset-0 size-0 opacity-0'
+                      type='file'
+                      accept='image/*'
+                      capture='environment'
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          handleUpload(e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </label>
+                  {uploading ? (
+                    <>
+                      <Loader2 className='mr-2 size-4 animate-spin' />
+                      Upload Photo
+                    </>
+                  ) : (
+                    <>
+                      <Upload className='mr-2 size-4' />
+                      Upload Photo
+                    </>
+                  )}
+                </Button>
+                {error && (
+                  <Alert className='border-red-400'>
+                    <AlertCircle className='h-4 w-4' color='red' />
+                    <AlertTitle>Error!</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
                 )}
-              </Button>
-              {uploaded && photoUrl && (
-                <div className='max-w-[60%] h-auto relative self-center'>
-                  <X
-                    className='absolute top-0 right-0 cursor-pointer'
-                    onClick={handleDelete}
-                  />
-                  <img
-                    src={photoUrl}
-                    alt={uploaded}
-                    className='w-auto h-auto'
-                  />
-                </div>
-              )}
+                {uploaded && photoUrl && (
+                  <div className='max-w-[60%] h-auto relative self-center'>
+                    <X
+                      className='absolute top-0 right-0 cursor-pointer'
+                      onClick={handleDelete}
+                    />
+                    <img
+                      src={photoUrl}
+                      alt={uploaded}
+                      className='w-auto h-auto'
+                    />
+                  </div>
+                )}
             </div>
 
             <Label htmlFor='cost'>Cost</Label>
             <Input type='number' id='cost' name='cost' value={cost} readOnly />
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className='text-right'>
           <SubmitButton formAction={addKilnRequest} pendingText='Submitting...'>
             Add Item
           </SubmitButton>

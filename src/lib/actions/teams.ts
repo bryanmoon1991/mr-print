@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '../supabase/server';
+import QueueManager from '@/lib/redis/qclient'
 
 export async function createTeam(prevState: any, formData: FormData) {
   'use server';
@@ -137,7 +138,7 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   const supabase = createClient();
 
   const { data, error } = await supabase
-    .from('kiln_requests') // Replace with your table name
+    .from('kiln_requests')
     .insert([
       {
         account_id: accountId,
@@ -153,15 +154,25 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
         non_member: nonMember,
         photo_url: photoUrl,
       },
-    ]);
+    ])
+    .select()
 
-    console.log('AFTER SUBMIT', data)
 
   if (error) {
     return {
       message: error.message,
     };
-  }
+  } else {
+    const record = data[0]
+    const result = await QueueManager.addJob(accountId, record);
 
-  redirect(`/qrform/${slug}/after-form`);
+    // Check if the job was successfully added to the Redis list
+    if (result > 0) {
+      console.log('successfully added to redis')
+    } else {
+      console.log('could not add to redis')
+    }
+    // console.log('AFTER SUBMIT', data)
+    redirect(`/qrform/${slug}/after-form?accountId=${accountId}&recordId=${record.id}`);
+  }
 }
