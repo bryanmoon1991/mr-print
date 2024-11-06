@@ -66,7 +66,6 @@ interface DataTableProps<TData, TValue> {
   filterExported: boolean;
   setFilterExported: (filterExported: boolean) => void;
   exportData: () => void;
-  testFunc: () => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -88,7 +87,6 @@ export function DataTable<TData, TValue>({
   filterExported,
   setFilterExported,
   exportData,
-  testFunc
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,

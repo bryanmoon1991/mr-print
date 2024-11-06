@@ -57,10 +57,6 @@ export default function PrintJobsPage({ params: { accountSlug } }) {
     fetchData();
   }, [pageIndex, pageSize, exportedFilter, filter, filterColumn]);
 
-  const testFunc = async () => {
-    console.log('hit');
-  };
-
   const exportData = async () => {
     console.log('here');
     console.log('hit', date);
@@ -170,7 +166,6 @@ export default function PrintJobsPage({ params: { accountSlug } }) {
         filterExported={filterExported}
         setFilterExported={setFilterExported}
         exportData={exportData}
-        testFunc={testFunc}
       />
     </div>
   );
