@@ -10,13 +10,14 @@ type Props = Omit<ComponentProps<typeof Button>, 'formAction'> & {
   pendingText?: string;
   formAction: (prevState: any, formData: FormData) => Promise<any>;
   errorMessage?: string;
+  modalSubmit?: boolean
 };
 
 const initialState = {
   message: "",
 };
 
-export function SubmitButton({ children, formAction, errorMessage, pendingText = "Submitting...", ...props }: Props) {
+export function SubmitButton({ children, modalSubmit, formAction, errorMessage, pendingText = "Submitting...", ...props }: Props) {
   const { pending, action } = useFormStatus();
   const [state, internalFormAction] = useFormState(formAction, initialState);
 
@@ -33,7 +34,7 @@ export function SubmitButton({ children, formAction, errorMessage, pendingText =
           </AlertDescription>
         </Alert>
       )}
-      <div>
+      <div className={!!modalSubmit ? 'text-right' : ''}>
         <Button {...props} type="submit" aria-disabled={pending} formAction={internalFormAction}>
           {isPending ? pendingText : children}
         </Button>

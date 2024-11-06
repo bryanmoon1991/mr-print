@@ -156,6 +156,7 @@ export default function PrintJobsPage() {
       <DataTable
         columns={columns}
         data={data}
+        setData={setData}
         pageCount={Math.ceil(totalCount / pageSize)}
         pageIndex={pageIndex}
         pageSize={pageSize}
@@ -172,7 +173,7 @@ export default function PrintJobsPage() {
         filterExported={filterExported}
         setFilterExported={setFilterExported}
         exportData={exportData}
-        meta={teamAccount}
+        account={teamAccount}
       />
     </div>
   );
