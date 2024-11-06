@@ -66,6 +66,7 @@ interface DataTableProps<TData, TValue> {
   filterExported: boolean;
   setFilterExported: (filterExported: boolean) => void;
   exportData: () => void;
+  meta: any
 }
 
 export function DataTable<TData, TValue>({
@@ -87,11 +88,13 @@ export function DataTable<TData, TValue>({
   filterExported,
   setFilterExported,
   exportData,
+  meta
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
     pageCount,
+    meta,
     state: { pagination: { pageIndex, pageSize } },
     onPaginationChange: ({ pageIndex, pageSize }) => {
       setPageIndex(pageIndex);

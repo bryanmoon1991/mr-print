@@ -7,9 +7,15 @@ import { columns } from './kilnRequests';
 import { toast } from 'sonner';
 import { addDays, format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
+import { useTeamAccount } from '../teamAccountProvider';
 
-export default function PrintJobsPage({ params: { accountSlug } }) {
+export default function PrintJobsPage() {
   const supabaseClient = createClient();
+
+  const teamAccount = useTeamAccount();
+  // useEffect(() => {
+  //   console.log('in print jobs page', teamAccount)
+  // }, [teamAccount])
 
   // Define pagination and filter state
   const [pageIndex, setPageIndex] = useState(0);
@@ -166,6 +172,7 @@ export default function PrintJobsPage({ params: { accountSlug } }) {
         filterExported={filterExported}
         setFilterExported={setFilterExported}
         exportData={exportData}
+        meta={teamAccount}
       />
     </div>
   );
