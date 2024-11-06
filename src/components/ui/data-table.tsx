@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '../ui/label';
 import { Switch } from '@/components/ui/switch';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, ArrowLeft, ArrowRight } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { DateRange, SelectRangeEventHandler } from 'react-day-picker';
 
@@ -107,20 +107,20 @@ export function DataTable<TData, TValue>({
       <div className='flex justify-between mb-2'>
         <div className="flex gap-2">
           <Button
-            variant='outline'
+            variant='ghost'
             size='sm'
             onClick={() => setPageIndex(pageIndex - 1)}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+          <ArrowLeft/>
           </Button>
           <Button
-            variant='outline'
+            variant='ghost'
             size='sm'
             onClick={() => setPageIndex(pageIndex + 1)}
             disabled={!table.getCanNextPage()}
           >
-            Next
+          <ArrowRight/>
           </Button>
           <Label className='self-center'>Page {pageIndex + 1}</Label>
         </div>
@@ -210,7 +210,7 @@ export function DataTable<TData, TValue>({
         <div className='flex space-x-2'>
           <Label className='self-center'>View:</Label>
           <Button
-            variant='ghost'
+            variant='outline'
             size='sm'
             onClick={() => setExportedFilter(false)}
             disabled={!exportedFilter} // Active when 'exported' is false
@@ -218,7 +218,7 @@ export function DataTable<TData, TValue>({
             Not Exported
           </Button>
           <Button
-            variant='ghost'
+            variant='outline'
             size='sm'
             onClick={() => setExportedFilter(true)}
             disabled={exportedFilter} // Active when 'exported' is true
