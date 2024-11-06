@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { DataTable } from '@/components/ui/data-table';
 import { columns } from './kilnRequests';
-import { toast } from "sonner"
-import { addDays, format } from "date-fns"
-import { DateRange } from "react-day-picker"
+import { toast } from 'sonner';
+import { addDays, format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 
 export default function PrintJobsPage({ params: { accountSlug } }) {
   const supabaseClient = createClient();
@@ -19,13 +19,7 @@ export default function PrintJobsPage({ params: { accountSlug } }) {
   const [exportedFilter, setExportedFilter] = useState(false); // Default to 'exported' being false
   const [filter, setFilter] = useState('');
   const [filterColumn, setFilterColumn] = useState('');
-  // const [startDate, setStartDate] = useState('');
-  // const [endDate, setEndDate] = useState('');
   const [filterExported, setFilterExported] = useState(true);
-  // const [date, setDate] = useState<DateRange | undefined>({
-  //   from: new Date(2022, 0, 20),
-  //   to: addDays(new Date(2022, 0, 20), 20),
-  // })
   const [date, setDate] = useState<DateRange | undefined>({
     from: addDays(new Date(), -30), // One month ago from today
     to: new Date(), // Today's date
@@ -40,6 +34,7 @@ export default function PrintJobsPage({ params: { accountSlug } }) {
       .from('kiln_requests')
       .select('*', { count: 'exact' })
       .range(from, to)
+      .order('created_at', { ascending: true })
       .eq('exported', exportedFilter); // Apply the filter based on exported state
 
     if (filter && filterColumn) {
@@ -63,61 +58,94 @@ export default function PrintJobsPage({ params: { accountSlug } }) {
   }, [pageIndex, pageSize, exportedFilter, filter, filterColumn]);
 
   const testFunc = async () => {
-    console.log('hit')
-  }
+    console.log('hit');
+  };
+
   const exportData = async () => {
-    // Step 1: Fetch the data to be exported
-    console.log('hit', date)
+    console.log('here');
+    console.log('hit', date);
     if (date && date.from && date.to) {
       let query = supabaseClient
         .from('kiln_requests')
-        .select('*')
-        .gte('created_at', date.from)
-        .lte('created_at', date.to);
+        .select(
+          'first_name, last_name, email, length, width, height, quantity, cost, firing_type, photo_url, non_member, printed, exported'
+        )
+        .gte(
+          'created_at',
+          format(new Date(date.from), "yyyy-MM-dd'T'HH:mm:ss'Z'")
+        )
+        .lte(
+          'created_at',
+          format(new Date(date.to), "yyyy-MM-dd'T'HH:mm:ss'Z'")
+        );
 
       if (filterExported) {
         query = query.eq('exported', !filterExported);
       }
+
+      query = query.csv();
       const { data: exportData, error } = await query;
 
       if (error) {
-        toast.error('Error exporting data:', {description: error.message});
+        toast.error('Error exporting data:', { description: error.message });
         console.error('Error exporting data:', error);
         return;
       }
 
-      const csvData = exportData
-        .map((row) => Object.values(row).join(','))
-        .join('\n');
+      generateFile(exportData);
+      await markAsExported();
+    } else {
+      toast.error('Please select a valid range');
+    }
+  };
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
 
-      const blob = new Blob([csvData], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `export_${date.from}_${date.to}.csv`;
-      link.click();
-      window.URL.revokeObjectURL(url);
+  const generateFile = (csvData) => {
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `kiln_requests_${formatter.format(
+      date?.from
+    )}_${formatter.format(date?.to)}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
 
-      // Step 3: Mark the exported rows as `exported: true`
+    toast.success('Export Success!', {
+      description: 'Your CSV download will begin shortly',
+    });
+  };
+
+  const markAsExported = async () => {
+    if (date && date.from && date.to) {
       const updateQuery = supabaseClient
         .from('kiln_requests')
         .update({ exported: true })
-        .eq('exported', false)
-        .gte('created_at', date.from)
-        .lte('created_at', date.to);
+        .gte(
+          'created_at',
+          format(new Date(date.from), "yyyy-MM-dd'T'HH:mm:ss'Z'")
+        )
+        .lte(
+          'created_at',
+          format(new Date(date.to), "yyyy-MM-dd'T'HH:mm:ss'Z'")
+        );
 
       const { error: updateError } = await updateQuery;
 
       if (updateError) {
-        toast.error('Error updating exported status:', {description: updateError.message});
+        toast.error('Error updating exported status:', {
+          description: updateError.message,
+        });
         console.error('Error updating exported status:', updateError);
         return;
       }
 
-      toast.success('Export Success!', {description: 'Your CSV download will begin shortly'});
-      console.log('Rows successfully marked as exported.');
-    } else {
-      toast.error('Please select a range');
+      toast.success('Successfully marked range as exported!:');
+      // console.log('Rows successfully marked as exported.');
     }
   };
 
@@ -141,7 +169,7 @@ export default function PrintJobsPage({ params: { accountSlug } }) {
         setDate={setDate}
         filterExported={filterExported}
         setFilterExported={setFilterExported}
-        exportDate={exportData}
+        exportData={exportData}
         testFunc={testFunc}
       />
     </div>

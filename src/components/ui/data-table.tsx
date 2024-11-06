@@ -107,7 +107,7 @@ export function DataTable<TData, TValue>({
   return (
     <div>
       <div className='flex justify-between mb-2'>
-        <div>
+        <div className="flex gap-2">
           <Button
             variant='outline'
             size='sm'
@@ -124,6 +124,7 @@ export function DataTable<TData, TValue>({
           >
             Next
           </Button>
+          <Label className='self-center'>Page {pageIndex + 1}</Label>
         </div>
         <div>
           <Label className='self-center'>Page Size:</Label>
