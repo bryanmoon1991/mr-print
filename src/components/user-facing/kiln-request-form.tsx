@@ -271,9 +271,9 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                 className='relative mb-4'
                 type='button'
               >
-                <label htmlFor={id} className='absolute inset-0 cursor-pointer'>
+                <label htmlFor='uploader' className='absolute inset-0 cursor-pointer'>
                   <input
-                    id={id}
+                    id='uploader'
                     className='absolute inset-0 size-0 opacity-0'
                     type='file'
                     accept='image/*'

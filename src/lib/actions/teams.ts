@@ -84,6 +84,10 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
   const generic = {
     member_cost: 0.0,
     non_member_cost: 0.0,
+    logo: {
+      logo_url: '',
+      filename: ''
+    },
     firing_types: [''],
     opt_in: { required: false },
     terms_and_conditions: '',
@@ -93,13 +97,18 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
   const non_member_cost = formData.get('non_member_cost') as string;
   const opt_in = formData.get('opt_in') as string;
   const terms_and_conditions = formData.get('terms_and_conditions') as string;
+  const logo_url = formData.get('logo_url') as string;
+  const filename = formData.get('filename') as string;
 
   generic.member_cost = +parseFloat(member_cost).toFixed(2);
   generic.non_member_cost = +parseFloat(non_member_cost).toFixed(2);
   generic.firing_types = getFiringTypes(Object.fromEntries(formData));
   generic.opt_in.required = opt_in === 'true' ? true : false;
   generic.terms_and_conditions = terms_and_conditions;
-
+  generic.logo = {
+    logo_url,
+    filename
+  }
   // console.log('inSubmit 2', generic)
 
   const accountId = formData.get('accountId') as string;
