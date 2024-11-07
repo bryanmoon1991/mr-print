@@ -1,10 +1,15 @@
 'use client';
 
+import { createClient } from '@/lib/supabase/client';
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { SubmitButton } from '../ui/submit-button';
+import { Button } from '../ui/button';
+import { Upload, Loader2, X, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { editTeamMetadata } from '@/lib/actions/teams';
 import { Label } from '../ui/label';
+import { Switch } from '@/components/ui/switch'
 import { GetAccountResponse } from '@usebasejump/shared';
 import {
   Card,
@@ -14,6 +19,18 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+
+import { Textarea } from '../ui/textarea';
+import { v4 as uuidv4 } from 'uuid';
 
 type Props = {
   account: GetAccountResponse;
@@ -27,6 +44,7 @@ type ExtendedProps = Props & {
 };
 
 export interface Metadata {
+  logo: { logo_url: string; filename: string };
   member_cost: number;
   non_member_cost: number;
   firing_types: string[];
@@ -37,13 +55,75 @@ export interface Metadata {
 }
 
 export default function EditTeamMetadata({ account }: Props) {
-  const [formData, setFormData] = useState<Metadata>(account.metadata as Metadata);
-  console.log('og data', account.metadata)
-  useEffect(() => {
-    console.log('changed', formData)
-  },[formData])
+  const supabase = createClient();
+  const [optIn, setOptIn] = useState<boolean>(account?.metadata?.opt_in?.required || false)
+  const [formData, setFormData] = useState<Metadata>(
+    account.metadata as Metadata
+  );
+  const [photoUrl, setPhotoUrl] = useState(
+    account?.metadata?.logo?.logo_url || ''
+  );
+  const [uploaded, setUploaded] = useState(
+    account?.metadata?.logo?.filename || ''
+  );
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  // console.log('og data', account.metadata);
+
+  const handleUpload = async (file) => {
+    // if a user uploads a photo and does not click save, the following data does not get written to metadata
+    // was considering doing a write to metadata every time handleUpload and handleDelete are called to keep metadata in sync with storage data
+    // instead i will make a unique path for the storage photo so that loading in photo works every time
+    if (!file) return;
+
+    setUploading(true);
+    setError('');
+    const fileName = `${account.account_id}_${uuidv4()}_${file.name}`; // Create a unique filename
+    // console.log(fileName);
+    const { data, error } = await supabase.storage
+      .from('logos') // replace 'photos' with your bucket name
+      .upload(fileName, file);
+
+    if (error) {
+      setError(error.message);
+      console.error('Error uploading file:', error.message);
+    } else {
+      console.log('after upload', data);
+      //   {
+      //     "path": "0681ac17-aedd-458a-a989-b8c3366d2ead-yaro.png",
+      //     "id": "4a3ed275-153d-4592-9ac5-7fc4f0eda8e0",
+      //     "fullPath": "logos/0681ac17-aedd-458a-a989-b8c3366d2ead-yaro.png"
+      //   }
+      if (data.fullPath) {
+        setPhotoUrl(process.env.NEXT_PUBLIC_PUBLIC_S3_URL! + data.fullPath);
+        setUploaded(data.path);
+      }
+      // console.log('File uploaded successfully:', data);
+    }
+    setUploading(false);
+  };
+
+  const handleDelete = async () => {
+    if (!uploaded) return;
+    let { data, error } = await supabase.storage
+      .from('logos')
+      .remove([uploaded]);
+
+    if (error) {
+      setError(error.message);
+      console.error('Error deleting file:', error.message);
+    } else {
+      if (data[0]['name'] == uploaded) {
+        setUploaded('');
+        setPhotoUrl('');
+        setError('');
+      }
+      // console.log('File deleted successfully:', data);
+    }
+  };
 
   const orderedKeys: (keyof Metadata)[] = [
+    'logo',
     'member_cost',
     'non_member_cost',
     'firing_types',
@@ -60,43 +140,108 @@ export default function EditTeamMetadata({ account }: Props) {
 
       if (key === 'terms_and_conditions') {
         return (
-          <div key={key} className="flex flex-col gap-1">
+          <div key={key} className='flex flex-col gap-1'>
             <Label htmlFor={key}>{labelText}</Label>
-            <textarea
+            <Textarea
               defaultValue={value as string}
               name={key}
               placeholder={labelText}
-              className="textarea-class"
+              className='resize-none'
               onChange={(e) => handleChange(e)}
             />
           </div>
         );
-      } else if (key === 'opt_in') {
-        // Use select for opt_in with options true/false
+      } else if (key === 'logo') {
         return (
-          <div key={key} className="flex flex-col gap-1">
-            <Label htmlFor={key}>{labelText} Required?</Label>
-            <select
-              name={key}
-              defaultValue={value.required ? 'true' : 'false'}
-              onChange={(e) =>
-                handleSelectChange(key as keyof Metadata, e.target.value)
-              }
+          <div key={key}>
+            {/* <Label htmlFor='photo_url'>Photo</Label> */}
+            <Input
+              type='hidden'
+              id='logo_url'
+              name='logo_url'
+              value={photoUrl}
+              // onChange={(e) => setPhotoUrl(e.target.value)}
+            />
+            <Input
+              type='hidden'
+              id='filename'
+              name='filename'
+              value={uploaded}
+              // onChange={(e) => setPhotoUrl(e.target.value)}
+            />
+            <Button
+              disabled={uploading}
+              className='relative mb-4'
+              type='button'
             >
-              <option value="true">True</option>
-              <option value="false">False</option>
-            </select>
+              <label
+                htmlFor='uploader'
+                className='absolute inset-0 cursor-pointer'
+              >
+                <input
+                  id='uploader'
+                  className='absolute inset-0 size-0 opacity-0'
+                  type='file'
+                  accept='image/*'
+                  capture='environment'
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      handleUpload(e.target.files[0]);
+                    }
+                  }}
+                />
+              </label>
+              {uploading ? (
+                <>
+                  <Loader2 className='mr-2 size-4 animate-spin' />
+                  Upload Logo
+                </>
+              ) : (
+                <>
+                  <Upload className='mr-2 size-4' />
+                  Upload Logo
+                </>
+              )}
+            </Button>
+            {error && (
+              <Alert className='border-red-400'>
+                <AlertCircle className='h-4 w-4' color='red' />
+                <AlertTitle>Error!</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {uploaded && photoUrl && (
+              <div className='h-auto relative self-center'>
+                <X
+                  className='absolute top-0 right-0 cursor-pointer'
+                  onClick={handleDelete}
+                />
+                <img src={photoUrl} alt={uploaded} className='w-auto h-auto' />
+              </div>
+            )}
           </div>
         );
-    } else if (key === 'member_cost' || key === 'non_member_cost') {
+      } else if (key === 'opt_in') {
         return (
-          <div key={key} className="flex flex-col gap-1">
+          <div key={key} className='flex gap-4'>
+            <Label className='self-center' htmlFor={key}>{labelText} Required?</Label>
+            <Switch
+              // name={key}
+              checked={value.required}
+              onCheckedChange={(val) => handleOptInChange(key as keyof Metadata, val)}
+            />
+            <input name={key} type='hidden' value={String(optIn)} />
+          </div>
+        );
+      } else if (key === 'member_cost' || key === 'non_member_cost') {
+        return (
+          <div key={key} className='flex flex-col gap-1'>
             <Label htmlFor={key}>{labelText}</Label>
             <Input
-              type="number"
+              type='number'
               defaultValue={value as number}
-              step="0.01"
-              min="0"
+              step='0.01'
+              min='0'
               name={key}
               placeholder={labelText}
               onChange={(e) => handleNumberChange(e)}
@@ -105,7 +250,7 @@ export default function EditTeamMetadata({ account }: Props) {
         );
       } else if (typeof value === 'string') {
         return (
-          <div key={key} className="flex flex-col gap-1">
+          <div key={key} className='flex flex-col gap-1'>
             <Label htmlFor={key}>{labelText}</Label>
             <Input
               defaultValue={value}
@@ -117,10 +262,10 @@ export default function EditTeamMetadata({ account }: Props) {
         );
       } else if (Array.isArray(value)) {
         return (
-          <div key={key} className="flex flex-col gap-1">
+          <div key={key} className='flex flex-col gap-1'>
             <Label>{labelText}</Label>
             {value.map((item, index) => (
-              <div key={`${key}-${index}`} className="flex gap-1">
+              <div key={`${key}-${index}`} className='flex gap-1'>
                 <Input
                   defaultValue={item}
                   name={`${key}-${index}`}
@@ -132,20 +277,19 @@ export default function EditTeamMetadata({ account }: Props) {
                     )
                   }
                 />
-                <button
-                  type="button"
+                <X
+                  type='button'
+                  className='cursor-pointer self-center'
                   onClick={() => removeArrayItem(key as keyof Metadata, index)}
-                >
-                  Remove
-                </button>
+                />
               </div>
             ))}
-            <button
-              type="button"
-              onClick={() => addArrayItem(key as keyof Metadata)}
+            <Button
+              variant='secondary'
+              onClick={(e) => handleAddArrayItem(e, key as keyof Metadata)}
             >
               Add {labelText}
-            </button>
+            </Button>
           </div>
         );
       }
@@ -154,7 +298,9 @@ export default function EditTeamMetadata({ account }: Props) {
     });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
@@ -189,12 +335,13 @@ export default function EditTeamMetadata({ account }: Props) {
     }
   };
 
-
-  const handleSelectChange = (key: keyof Metadata, value: string) => {
+  const handleOptInChange = (key: keyof Metadata, value: boolean) => {
+    // console.log(value)
+    setOptIn(value)
     setFormData((prevData) => ({
       ...prevData,
       [key]: {
-        required: value === 'true',
+        required: value
       },
     }));
   };
@@ -212,6 +359,11 @@ export default function EditTeamMetadata({ account }: Props) {
       [key]: [...(prevData[key] as string[]), ''], // Add an empty string initially
     }));
   };
+
+  const handleAddArrayItem = (e, key: keyof Metadata) => {
+    e.preventDefault()
+    addArrayItem(key)
+  }
 
   return (
     <Card>

@@ -6,7 +6,7 @@ export default function PersonalAccountSettingsPage({children}) {
     const items = [
         { name: "Profile", href: "/dashboard/settings" },
         { name: "Teams", href: "/dashboard/settings/teams" },
-        { name: "Billing", href: "/dashboard/settings/billing" },
+        // { name: "Billing", href: "/dashboard/settings/billing" },
     ]
     return (
         <div className="space-y-6 w-full">
