@@ -34,6 +34,7 @@ export async function editTeamName(prevState: any, formData: FormData) {
 
   const { error } = await supabase.rpc('update_account', {
     name,
+    slug: name,
     account_id: accountId,
   });
 

@@ -29,8 +29,8 @@ export default async function TeamAccountLayout({
       href: `/dashboard/${accountSlug}`,
     },
     {
-      name: 'Print Jobs',
-      href: `/dashboard/${accountSlug}/printjobs`,
+      name: 'Kiln Requests',
+      href: `/dashboard/${accountSlug}/kilnrequests`,
     },
     {
       name: 'Settings',
