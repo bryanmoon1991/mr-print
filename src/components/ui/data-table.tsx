@@ -99,6 +99,8 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isReprintOpen, setIsReprintOpen] = useState(false);
+  const [isImageOpen, setIsImageOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
   const [recordId, setRecordId] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -137,6 +139,12 @@ export function DataTable<TData, TValue>({
     }
   };
 
+  const handleImageOpen = (imageUrl) => {
+    if (!imageUrl) return;
+    setImageUrl(imageUrl);
+    setIsImageOpen(true);
+  };
+
   const table = useReactTable({
     data,
     columns,
@@ -145,6 +153,7 @@ export function DataTable<TData, TValue>({
       account,
       openDialogWithRowData,
       handleReprint,
+      handleImageOpen,
     },
     state: { pagination: { pageIndex, pageSize } },
     onPaginationChange: ({ pageIndex, pageSize }) => {
@@ -162,6 +171,11 @@ export function DataTable<TData, TValue>({
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
+  };
+
+  const handleCloseImageDialog = () => {
+    setImageUrl('');
+    setIsImageOpen(false);
   };
 
   useEffect(() => {
@@ -455,6 +469,21 @@ export function DataTable<TData, TValue>({
                 If the printer seems to be in working order and requests are
                 still not going through, please notify the manager onsite and
                 we'll work to get this issue resolved asap!
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isImageOpen} onOpenChange={handleCloseImageDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Photo</DialogTitle>
+              <DialogDescription>
+                <img
+                  src={imageUrl}
+                  alt='photo of piece'
+                  className='w-auto h-auto'
+                />
               </DialogDescription>
             </DialogHeader>
           </DialogContent>

@@ -75,6 +75,7 @@ export const columns: ColumnDef<KilnRequest>[] = [
     cell: ({ row, table }) => {
       const record = row.original;
       const handleReprint = table?.options?.meta?.handleReprint
+      const handleImageOpen = table?.options?.meta?.handleImageOpen
       const openDialogWithRowData = table?.options?.meta?.openDialogWithRowData
 
       return (
@@ -87,6 +88,9 @@ export const columns: ColumnDef<KilnRequest>[] = [
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
+              <DropdownMenuItem disabled={!record.photo_url} onClick={() => handleImageOpen(record.photo_url)}>
+                View Image
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleReprint(record)}>
                 Reprint Request
               </DropdownMenuItem>
