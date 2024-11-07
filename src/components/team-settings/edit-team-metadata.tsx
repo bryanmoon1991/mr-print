@@ -9,6 +9,7 @@ import { Upload, Loader2, X, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { editTeamMetadata } from '@/lib/actions/teams';
 import { Label } from '../ui/label';
+import { Switch } from '@/components/ui/switch'
 import { GetAccountResponse } from '@usebasejump/shared';
 import {
   Card,
@@ -18,6 +19,17 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+
+import { Textarea } from '../ui/textarea';
 import { v4 as uuidv4 } from 'uuid';
 
 type Props = {
@@ -44,6 +56,7 @@ export interface Metadata {
 
 export default function EditTeamMetadata({ account }: Props) {
   const supabase = createClient();
+  const [optIn, setOptIn] = useState<boolean>(account?.metadata?.opt_in?.required || false)
   const [formData, setFormData] = useState<Metadata>(
     account.metadata as Metadata
   );
@@ -55,14 +68,7 @@ export default function EditTeamMetadata({ account }: Props) {
   );
   const [uploading, setUploading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  console.log('og data', account.metadata);
-  // useEffect(() => {
-  //   if (!!account.metadata.logo_url) {
-  //     setUploaded(account.metadata.logo_url)
-  //     setPhotoUrl(account.metadata.logo_url)
-  //   }
-
-  // },[])
+  // console.log('og data', account.metadata);
 
   const handleUpload = async (file) => {
     // if a user uploads a photo and does not click save, the following data does not get written to metadata
@@ -136,11 +142,11 @@ export default function EditTeamMetadata({ account }: Props) {
         return (
           <div key={key} className='flex flex-col gap-1'>
             <Label htmlFor={key}>{labelText}</Label>
-            <textarea
+            <Textarea
               defaultValue={value as string}
               name={key}
               placeholder={labelText}
-              className='textarea-class'
+              className='resize-none'
               onChange={(e) => handleChange(e)}
             />
           </div>
@@ -216,20 +222,15 @@ export default function EditTeamMetadata({ account }: Props) {
           </div>
         );
       } else if (key === 'opt_in') {
-        // Use select for opt_in with options true/false
         return (
-          <div key={key} className='flex flex-col gap-1'>
-            <Label htmlFor={key}>{labelText} Required?</Label>
-            <select
-              name={key}
-              defaultValue={value.required ? 'true' : 'false'}
-              onChange={(e) =>
-                handleSelectChange(key as keyof Metadata, e.target.value)
-              }
-            >
-              <option value='true'>True</option>
-              <option value='false'>False</option>
-            </select>
+          <div key={key} className='flex gap-4'>
+            <Label className='self-center' htmlFor={key}>{labelText} Required?</Label>
+            <Switch
+              // name={key}
+              checked={value.required}
+              onCheckedChange={(val) => handleOptInChange(key as keyof Metadata, val)}
+            />
+            <input name={key} type='hidden' value={String(optIn)} />
           </div>
         );
       } else if (key === 'member_cost' || key === 'non_member_cost') {
@@ -276,20 +277,19 @@ export default function EditTeamMetadata({ account }: Props) {
                     )
                   }
                 />
-                <button
+                <X
                   type='button'
+                  className='cursor-pointer self-center'
                   onClick={() => removeArrayItem(key as keyof Metadata, index)}
-                >
-                  Remove
-                </button>
+                />
               </div>
             ))}
-            <button
-              type='button'
-              onClick={() => addArrayItem(key as keyof Metadata)}
+            <Button
+              variant='secondary'
+              onClick={(e) => handleAddArrayItem(e, key as keyof Metadata)}
             >
               Add {labelText}
-            </button>
+            </Button>
           </div>
         );
       }
@@ -335,11 +335,13 @@ export default function EditTeamMetadata({ account }: Props) {
     }
   };
 
-  const handleSelectChange = (key: keyof Metadata, value: string) => {
+  const handleOptInChange = (key: keyof Metadata, value: boolean) => {
+    // console.log(value)
+    setOptIn(value)
     setFormData((prevData) => ({
       ...prevData,
       [key]: {
-        required: value === 'true',
+        required: value
       },
     }));
   };
@@ -357,6 +359,11 @@ export default function EditTeamMetadata({ account }: Props) {
       [key]: [...(prevData[key] as string[]), ''], // Add an empty string initially
     }));
   };
+
+  const handleAddArrayItem = (e, key: keyof Metadata) => {
+    e.preventDefault()
+    addArrayItem(key)
+  }
 
   return (
     <Card>
