@@ -12,4 +12,7 @@ export async function checkForDuplicate(accountId: string, newJob: any) {
 
 export async function reprint(accountId: string, newJob: any) {
   'use server';
+
+  const result = await QueueManager.addJob(accountId, newJob)
+  return result
 }

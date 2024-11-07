@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import DashboardHeader from '@/components/dashboard/dashboard-header';
 import { redirect } from 'next/navigation';
+import TeamAccountProvider from './teamAccountProvider';
 
 export default async function TeamAccountLayout({
   children,
@@ -43,7 +44,9 @@ export default async function TeamAccountLayout({
         accountId={teamAccount.account_id}
         navigation={navigation}
       />
-      <div className='w-full p-8'>{children}</div>
+      <TeamAccountProvider teamAccount={teamAccount}>
+        <div className='w-full p-8'>{children}</div>
+      </TeamAccountProvider>
     </>
   );
 }

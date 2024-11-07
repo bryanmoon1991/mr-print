@@ -1,6 +1,8 @@
 import { Inter as FontSans } from "next/font/google"
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner"
+
 
 const defaultUrl = process.env.NEXT_PUBLIC_URL as string || "http://localhost:3000";
 
@@ -29,6 +31,7 @@ export default function RootLayout({
         <main className="min-h-screen flex flex-col items-center">
           {children}
         </main>
+        <Toaster position="top-right" expand={true} richColors/>
       </body>
     </html>
   );

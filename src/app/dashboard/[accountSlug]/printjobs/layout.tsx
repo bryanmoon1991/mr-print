@@ -4,20 +4,11 @@ import {Separator} from "@/components/ui/separator";
 
 export default function PrintJobsLayout({children, params: {accountSlug}}: {children: React.ReactNode, params: {accountSlug: string}}) {
     const items = [
-        { name: "Print Jobs", href: `/dashboard/${accountSlug}/printjobs` },
-        // { name: "Members", href: `/dashboard/${accountSlug}/settings/members` },
-        // { name: "Billing", href: `/dashboard/${accountSlug}/settings/billing` },
+        { name: "Kiln Requests", href: `/dashboard/${accountSlug}/printjobs` },
     ]
     return (
         <div className="hidden space-y-6 pb-16 md:block">
-            <DashboardTitle title="Print Jobs" description="Manage your Print Jobs." />
-            {/* <Separator />
-            <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0 w-full max-w-6xl mx-auto">
-                <aside className="-mx-4 lg:w-1/5">
-                    <SettingsNavigation items={items} />
-                </aside>
-                <div className="grow">{children}</div>
-            </div> */}
+            <DashboardTitle title="Kiln Requests" description="Manage your kiln requests." />
             <div className="grow">{children}</div>
         </div>
     )

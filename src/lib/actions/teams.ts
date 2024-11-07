@@ -137,6 +137,7 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   const photoUrl = formData.get('photo_url') as string;
   const supabase = createClient();
 
+
   const { data, error } = await supabase
     .from('kiln_requests')
     .insert([
@@ -174,5 +175,48 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
     }
     // console.log('AFTER SUBMIT', data)
     redirect(`/qrform/${slug}/after-form?accountId=${accountId}&recordId=${record.id}`);
+  }
+}
+
+export async function updateKilnRequest(prevState: any, formData: FormData) {
+  'use server';
+
+  const id = formData.get('record_id') as string;
+  const firstName = formData.get('first_name') as string;
+  const lastName = formData.get('last_name') as string;
+  const length = formData.get('length') as string;
+  const width = formData.get('width') as string;
+  const height = formData.get('height') as string;
+  const quantity = formData.get('quantity') as string;
+  const cost = formData.get('cost') as string;
+  const firingType = formData.get('firing_type') as string;
+  const nonMember = formData.get('non_member') as string;
+  const supabase = createClient();
+
+  console.log('cost', cost)
+
+  const { data, error } = await supabase
+  .from('kiln_requests')
+  .update({ 
+    first_name: firstName,
+    last_name: lastName,
+    length,
+    width,
+    height,
+    quantity,
+    cost,
+    firing_type: firingType,
+    non_member: nonMember,
+  })
+  .eq('id', id)
+  .select()
+
+  if (error) {
+    return {
+      message: error.message,
+    };
+  } else {
+    const record = data[0]
+    return record
   }
 }
