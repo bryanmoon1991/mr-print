@@ -3,6 +3,7 @@ import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from "@s
 export default async function handleEdgeFunctionError(error: any) {
     if (error instanceof FunctionsHttpError) {
         const errorMessage = await error.context.json()
+        console.log('edge', errorMessage)
         return {
             message: Boolean(errorMessage.error) ? errorMessage.error : JSON.stringify(errorMessage)
         }

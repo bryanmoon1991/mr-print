@@ -9,7 +9,7 @@ export default function NewTeamForm() {
     return (
         <form className="animate-in flex-1 flex flex-col w-full justify-center gap-y-6 text-foreground">
             <div className="flex flex-col gap-y-2">
-                <Label htmlFor="email">
+                <Label htmlFor="name">
                     Team Name
                 </Label>
                 <Input
@@ -18,7 +18,7 @@ export default function NewTeamForm() {
                     required
                 />
             </div>
-            <div className="flex flex-col gap-y-2">
+            {/* <div className="flex flex-col gap-y-2">
                 <Label htmlFor="password">
                     Identifier
                 </Label>
@@ -32,7 +32,7 @@ export default function NewTeamForm() {
                         required
                     />
                 </div>
-            </div>
+            </div> */}
             <SubmitButton
                 formAction={createTeam}
                 pendingText="Creating..."
