@@ -13,6 +13,7 @@ export default function PrintJobsPage() {
   const supabaseClient = createClient();
 
   const teamAccount = useTeamAccount();
+
   // useEffect(() => {
   //   console.log('in print jobs page', teamAccount)
   // }, [teamAccount])
