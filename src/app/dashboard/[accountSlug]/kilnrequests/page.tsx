@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { addDays, format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { useTeamAccount } from '../teamAccountProvider';
+import { parse, unparse } from 'papaparse';
 
 export default function PrintJobsPage() {
   const supabaseClient = createClient();
@@ -27,6 +28,7 @@ export default function PrintJobsPage() {
   const [filter, setFilter] = useState('');
   const [filterColumn, setFilterColumn] = useState('');
   const [filterExported, setFilterExported] = useState(true);
+  const [exportTotals, setExportTotals] = useState(true);
   const [date, setDate] = useState<DateRange | undefined>({
     from: addDays(new Date(), -30), // One month ago from today
     to: new Date(), // Today's date
@@ -68,19 +70,30 @@ export default function PrintJobsPage() {
     console.log('here');
     console.log('hit', date);
     if (date && date.from && date.to) {
+      let from = new Date(date.from).toISOString();
+      const toDate = new Date(date.to); // Parse the input
+      // Add 23 hours, 59 minutes, 59 seconds, and 999 milliseconds
+      toDate.setTime(
+        toDate.getTime() +
+          23 * 60 * 60 * 1000 +
+          59 * 60 * 1000 +
+          59 * 1000 +
+          999
+      );
+      // console.log('after', toDate.toISOString());
+      const to = toDate.toISOString();
+      // date values are converted back to UTC and always have a time of 00:00:00
+      // this means that a selected date is always right at the start of the date
+      // if a user wishes to grab data up to a specific date, they need to add a day to the selected date
+      console.log('from', from);
+      console.log('to', to);
       let query = supabaseClient
         .from('kiln_requests')
         .select(
-          'first_name, last_name, email, length, width, height, quantity, cost, firing_type, photo_url, non_member, printed, exported'
+          'created_at, first_name, last_name, email, length, width, height, quantity, cost, firing_type, photo_url, non_member, printed, exported'
         )
-        .gte(
-          'created_at',
-          format(new Date(date.from), "yyyy-MM-dd'T'HH:mm:ss'Z'")
-        )
-        .lte(
-          'created_at',
-          format(new Date(date.to), "yyyy-MM-dd'T'HH:mm:ss'Z'")
-        );
+        .gte('created_at', from)
+        .lte('created_at', to);
 
       if (filterExported) {
         query = query.eq('exported', !filterExported);
@@ -95,7 +108,19 @@ export default function PrintJobsPage() {
         return;
       }
 
-      generateFile(exportData);
+      let parsed = parse(exportData, { header: true });
+
+      const transformedData = parsed.data.map((row) => ({
+        ...row,
+        created_at: new Date(row.created_at).toLocaleString('en-US'), // Convert to local time
+      }));
+
+      if (exportTotals) {
+        generateGroupedCsv(transformedData);
+      }
+
+      let unparsed = unparse(transformedData);
+      generateFile(unparsed);
       await markAsExported();
     } else {
       toast.error('Please select a valid range');
@@ -114,7 +139,7 @@ export default function PrintJobsPage() {
     link.href = url;
     link.download = `kiln_requests_${formatter.format(
       date?.from
-    )}_${formatter.format(date?.to)}.csv`;
+    )}-${formatter.format(date?.to)}.csv`;
     link.click();
     window.URL.revokeObjectURL(url);
 
@@ -125,17 +150,23 @@ export default function PrintJobsPage() {
 
   const markAsExported = async () => {
     if (date && date.from && date.to) {
+      let from = new Date(date.from).toISOString();
+      const toDate = new Date(date.to);
+      // Add 23 hours, 59 minutes, 59 seconds, and 999 milliseconds
+      toDate.setTime(
+        toDate.getTime() +
+          23 * 60 * 60 * 1000 +
+          59 * 60 * 1000 +
+          59 * 1000 +
+          999
+      );
+      // console.log('after', toDate.toISOString());
+      const to = toDate.toISOString();
       const updateQuery = supabaseClient
         .from('kiln_requests')
         .update({ exported: true })
-        .gte(
-          'created_at',
-          format(new Date(date.from), "yyyy-MM-dd'T'HH:mm:ss'Z'")
-        )
-        .lte(
-          'created_at',
-          format(new Date(date.to), "yyyy-MM-dd'T'HH:mm:ss'Z'")
-        );
+        .gte('created_at', from)
+        .lte('created_at', to);
 
       const { error: updateError } = await updateQuery;
 
@@ -148,8 +179,75 @@ export default function PrintJobsPage() {
       }
 
       toast.success('Successfully marked range as exported!:');
-      // console.log('Rows successfully marked as exported.');
     }
+  };
+
+  const generateGroupedCsv = (parsedData) => {
+    // Group data by first and last name
+    const groupedDataMap = parsedData.reduce((acc, row) => {
+      const fullName = `${row.first_name} ${row.last_name}`.trim();
+
+      if (!acc[fullName]) {
+        acc[fullName] = {
+          full_name: fullName,
+          email: row.email,
+          cost: 0,
+          total_quantity: 0,
+          date_range: { earliest: null, latest: null },
+        };
+      }
+
+      // Sum up the costs
+      const cost = parseFloat(row.cost.replace('$', '')) || 0;
+      acc[fullName].cost += cost;
+
+      // Sum up the quantity
+      const quantity = parseInt(row.quantity, 10) || 0;
+      acc[fullName].total_quantity += quantity;
+
+      // Update date range
+      const createdAt = new Date(row.created_at);
+      if (
+        !acc[fullName].date_range.earliest ||
+        createdAt < new Date(acc[fullName].date_range.earliest)
+      ) {
+        acc[fullName].date_range.earliest = createdAt;
+      }
+      if (
+        !acc[fullName].date_range.latest ||
+        createdAt > new Date(acc[fullName].date_range.latest)
+      ) {
+        acc[fullName].date_range.latest = createdAt;
+      }
+
+      return acc;
+    }, {});
+
+    // Convert the grouped data map back to an array
+    const groupedData = Object.values(groupedDataMap).map((entry) => ({
+      ...entry,
+      cost: `$${entry.cost.toFixed(2)}`, // Format the cost as currency
+      date_range: `${entry.date_range.earliest.toLocaleString(
+        'en-US'
+      )} to ${entry.date_range.latest.toLocaleString('en-US')}`, // Format date range
+    }));
+
+    // Convert grouped data back to CSV
+    const groupedCsv = unparse(groupedData);
+
+    const blob = new Blob([groupedCsv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `kiln_request_totals-${formatter.format(
+      date?.from
+    )}-${formatter.format(date?.to)}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+    toast.success('Export Success!', {
+      description: 'Your totals CSV download will begin shortly',
+    });
   };
 
   return (
@@ -174,6 +272,8 @@ export default function PrintJobsPage() {
         filterExported={filterExported}
         setFilterExported={setFilterExported}
         exportData={exportData}
+        setExportTotals={setExportTotals}
+        exportTotals={exportTotals}
         account={teamAccount}
       />
     </div>

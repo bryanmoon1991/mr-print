@@ -18,7 +18,7 @@ export const columns: ColumnDef<KilnRequest>[] = [
     header: 'Created At',
     cell: ({ row }) => {
       const date = row.getValue('created_at');
-      return new Date(date).toLocaleDateString('en-US');
+      return new Date(date).toLocaleString('en-US');
     },
   },
   {
