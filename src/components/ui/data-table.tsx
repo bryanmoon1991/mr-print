@@ -71,6 +71,8 @@ interface DataTableProps<TData, TValue> {
   setDate: SelectRangeEventHandler;
   filterExported: boolean;
   setFilterExported: (filterExported: boolean) => void;
+  exportTotals: boolean;
+  setExportTotals: (exportTotals: boolean) => void;
   exportData: () => void;
   account: any;
 }
@@ -94,6 +96,8 @@ export function DataTable<TData, TValue>({
   setDate,
   filterExported,
   setFilterExported,
+  exportTotals,
+  setExportTotals,
   exportData,
   account,
 }: DataTableProps<TData, TValue>) {
@@ -440,6 +444,19 @@ export function DataTable<TData, TValue>({
                     <Switch
                       checked={filterExported}
                       onCheckedChange={setFilterExported}
+                    />
+                  </span>
+
+                  <span className='flex gap-2'>
+                    <Label
+                      className='self-center'
+                      htmlFor='exportTotalsToggle'
+                    >
+                      Export Totals?:
+                    </Label>
+                    <Switch
+                      checked={exportTotals}
+                      onCheckedChange={setExportTotals}
                     />
                   </span>
                 </span>

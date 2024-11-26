@@ -32,6 +32,7 @@
     "next": "latest",
     "next-themes": "^0.3.0",
     "node-fetch": "^3.3.2",
+    "papaparse": "^5.4.1",
     "postcss": "8.4.33",
     "qrcode": "^1.5.4",
     "react": "18.2.0",
@@ -52,6 +53,7 @@
   "devDependencies": {
     "@types/bull": "^3.15.9",
     "@types/node": "20.11.5",
+    "@types/papaparse": "^5.3.15",
     "@types/qrcode": "^1.5.5",
     "@types/react": "18.2.48",
     "@types/react-dom": "18.2.18",
