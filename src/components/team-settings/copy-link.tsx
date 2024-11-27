@@ -5,8 +5,13 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner'
+import type { Account } from '../../../types/data-table';
 
-export default function CopyLink({teamAccount}) {
+interface CopyLinkProps {
+  teamAccount: Account;
+}
+
+export default function CopyLink({teamAccount}: CopyLinkProps) {
   const handleCopyClick = () => {
     navigator.clipboard
       .writeText(

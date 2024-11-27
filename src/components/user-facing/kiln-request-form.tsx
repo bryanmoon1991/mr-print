@@ -40,6 +40,12 @@ interface FormProps {
   metadata: Metadata;
 }
 
+interface UploadResponse {
+  id: string;
+  fullPath: string;
+  path: string; 
+}
+
 export default function KilnRequestForm({ metadata }: FormProps) {
   const supabase = createClient();
   const { accountSlug } = useParams();
@@ -54,29 +60,29 @@ export default function KilnRequestForm({ metadata }: FormProps) {
     }
   }, [searchParams]);
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [optIn, setOptIn] = useState(false);
-  const [length, setLength] = useState(0);
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [nonMember, setNonMember] = useState(false);
-  const [firingType, setFiringType] = useState(metadata.firing_types[0]);
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [cost, setCost] = useState(0);
-  const [error, setError] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [uploaded, setUploaded] = useState('');
+  const [firstName, setFirstName] = useState<string>('');
+  const [lastName, setLastName] = useState<string>('');
+  const [optIn, setOptIn] = useState<boolean>(false);
+  const [length, setLength] = useState<number>(0);
+  const [width, setWidth] = useState<number>(0);
+  const [height, setHeight] = useState<number>(0);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [nonMember, setNonMember] = useState<boolean>(false);
+  const [firingType, setFiringType] = useState<string>(metadata.firing_types[0]);
+  const [photoUrl, setPhotoUrl] = useState<string>('');
+  const [cost, setCost] = useState<number>(0);
+  const [error, setError] = useState<string>('');
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [uploaded, setUploaded] = useState<string>('');
 
   useEffect(() => {
     const baseCost = length * width * height;
     const unitCost = nonMember
       ? metadata.non_member_cost
       : metadata.member_cost;
-    const calcCost = Number.parseFloat(baseCost * unitCost * quantity).toFixed(
+    const calcCost = parseFloat((baseCost * unitCost * quantity).toFixed(
       2
-    );
+    ));
 
     setCost(calcCost);
   }, [length, width, height, quantity, nonMember, metadata]);
@@ -89,7 +95,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
     setNonMember(checked);
   };
 
-  const handleUpload = async (file) => {
+  const handleUpload = async (file: File) => {
     if (!file) return;
 
     setUploading(true);
@@ -98,14 +104,14 @@ export default function KilnRequestForm({ metadata }: FormProps) {
     // console.log(fileName);
     const { data, error } = await supabase.storage
       .from('photos') // replace 'photos' with your bucket name
-      .upload(fileName, file);
+      .upload(fileName, file) as { data: UploadResponse | null, error: Error };
 
     if (error) {
       setError(error.message);
       console.error('Error uploading file:', error.message);
     } else {
       // console.log('after upload', data);
-      if (data.fullPath) {
+      if (data && data.fullPath) {
         setPhotoUrl(process.env.NEXT_PUBLIC_PUBLIC_S3_URL! + data.fullPath);
         setUploaded(data.path);
       }
@@ -124,7 +130,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
       setError(error.message);
       console.error('Error deleting file:', error.message);
     } else {
-      if (data[0]['name'] == uploaded) {
+      if (data && data[0]['name'] == uploaded) {
         setUploaded('');
         setPhotoUrl('');
         setError('');
