@@ -54,6 +54,12 @@ export interface Metadata {
   terms_and_conditions: string;
 }
 
+interface UploadResponse {
+  id: string;
+  path: string;
+  fullPath: string
+}
+
 export default function EditTeamMetadata({ account }: Props) {
   const supabase = createClient();
   const [optIn, setOptIn] = useState<boolean>(account?.metadata?.opt_in?.required || false)
@@ -70,7 +76,7 @@ export default function EditTeamMetadata({ account }: Props) {
   const [error, setError] = useState<string>('');
   // console.log('og data', account.metadata);
 
-  const handleUpload = async (file) => {
+  const handleUpload = async (file: File) => {
     // if a user uploads a photo and does not click save, the following data does not get written to metadata
     // was considering doing a write to metadata every time handleUpload and handleDelete are called to keep metadata in sync with storage data
     // instead i will make a unique path for the storage photo so that loading in photo works every time
@@ -82,7 +88,7 @@ export default function EditTeamMetadata({ account }: Props) {
     // console.log(fileName);
     const { data, error } = await supabase.storage
       .from('logos') // replace 'photos' with your bucket name
-      .upload(fileName, file);
+      .upload(fileName, file) as {data: UploadResponse | null, error: Error};
 
     if (error) {
       setError(error.message);
@@ -94,7 +100,7 @@ export default function EditTeamMetadata({ account }: Props) {
       //     "id": "4a3ed275-153d-4592-9ac5-7fc4f0eda8e0",
       //     "fullPath": "logos/0681ac17-aedd-458a-a989-b8c3366d2ead-yaro.png"
       //   }
-      if (data.fullPath) {
+      if (data && data.fullPath) {
         setPhotoUrl(process.env.NEXT_PUBLIC_PUBLIC_S3_URL! + data.fullPath);
         setUploaded(data.path);
       }
@@ -113,7 +119,7 @@ export default function EditTeamMetadata({ account }: Props) {
       setError(error.message);
       console.error('Error deleting file:', error.message);
     } else {
-      if (data[0]['name'] == uploaded) {
+      if (data && data[0]['name'] == uploaded) {
         setUploaded('');
         setPhotoUrl('');
         setError('');
@@ -227,7 +233,7 @@ export default function EditTeamMetadata({ account }: Props) {
             <Label className='self-center' htmlFor={key}>{labelText} Required?</Label>
             <Switch
               // name={key}
-              checked={value.required}
+              // checked={value.required}
               onCheckedChange={(val) => handleOptInChange(key as keyof Metadata, val)}
             />
             <input name={key} type='hidden' value={String(optIn)} />
@@ -326,7 +332,7 @@ export default function EditTeamMetadata({ account }: Props) {
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     // Ensure the input is valid number or empty string
-    const numberValue = value === '' ? '' : parseFloat(value);
+    const numberValue = value === '' ? 0 : parseFloat(value);
     if (!isNaN(numberValue) || value === '') {
       setFormData((prevData) => ({
         ...prevData,
@@ -360,7 +366,7 @@ export default function EditTeamMetadata({ account }: Props) {
     }));
   };
 
-  const handleAddArrayItem = (e, key: keyof Metadata) => {
+  const handleAddArrayItem = (e: React.MouseEvent, key: keyof Metadata) => {
     e.preventDefault()
     addArrayItem(key)
   }

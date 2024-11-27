@@ -211,13 +211,13 @@ export default function PrintJobsPage() {
       const createdAt = new Date(row.created_at);
       if (
         !acc[fullName].date_range.earliest ||
-        createdAt < new Date(acc[fullName].date_range.earliest)
+        createdAt < new Date(acc[fullName].date_range.earliest ?? createdAt)
       ) {
         acc[fullName].date_range.earliest = createdAt;
       }
       if (
         !acc[fullName].date_range.latest ||
-        createdAt > new Date(acc[fullName].date_range.latest)
+        createdAt > new Date(acc[fullName].date_range.latest ?? createdAt)
       ) {
         acc[fullName].date_range.latest = createdAt;
       }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import QueueManager from '@/lib/redis/qclient';
-import sharp from 'sharp';
+import sharp, {Sharp} from 'sharp';
 import fetch from 'node-fetch';
 
 export async function POST(
@@ -88,6 +88,9 @@ async function convertImageToCustomFormat(
   const metadata = await image.metadata();
   let { width, height } = metadata;
 
+  if (width === undefined || height === undefined) {
+    throw new Error('Image metadata is missing width or height.');
+  }
   //compensate for rotation
   let temp = width;
   width = height;
@@ -124,7 +127,7 @@ async function convertImageToCustomFormat(
 }
 
 // Helper function to convert image to 1-bit per pixel (mono)
-async function convertTo1BitPerPixel(image, width, height) {
+async function convertTo1BitPerPixel(image: Sharp, width: number, height: number) {
   const data = await image
     .threshold(128) // Convert to black and white
     .raw()
@@ -160,7 +163,7 @@ async function convertTo1BitPerPixel(image, width, height) {
 }
 
 // Helper function to convert image to 4-bit per pixel (gray16)
-async function convertTo4BitPerPixel(image, width, height) {
+async function convertTo4BitPerPixel(image: Sharp, width: number, height: number) {
   const data = await image.greyscale().raw().toBuffer();
 
   const byteArray = [];
