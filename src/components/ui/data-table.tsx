@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
@@ -37,9 +36,8 @@ import {
 import { Label } from '../ui/label';
 import { Checkbox } from './checkbox';
 import { Switch } from '@/components/ui/switch';
-import { CalendarIcon, ArrowLeft, ArrowRight } from 'lucide-react';
+import { CalendarIcon, ArrowLeft, ArrowRight, Info } from 'lucide-react';
 import { format } from 'date-fns';
-import { DateRange, SelectRangeEventHandler } from 'react-day-picker';
 import { SubmitButton } from './submit-button';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
@@ -48,34 +46,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
 import { checkForDuplicate, reprint } from '@/lib/actions/print-requests';
 import { updateKilnRequest } from '@/lib/actions/teams';
 import { toast } from 'sonner';
-
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-  setData: (data: any) => void;
-  pageCount: number;
-  pageIndex: number;
-  pageSize: number;
-  setPageIndex: (index: number) => void;
-  setPageSize: (size: number) => void;
-  exportedFilter: boolean;
-  setExportedFilter: (filter: boolean) => void;
-  filter: string;
-  setFilter: (filter: string) => void;
-  filterColumn: string;
-  setFilterColumn: (column: string) => void;
-  date: DateRange | undefined;
-  setDate: SelectRangeEventHandler;
-  filterExported: boolean;
-  setFilterExported: (filterExported: boolean) => void;
-  exportTotals: boolean;
-  setExportTotals: (exportTotals: boolean) => void;
-  exportData: () => void;
-  account: any;
-}
+import { KilnRequest } from '@/app/dashboard/[accountSlug]/kilnrequests/types';
+import type { DataTableProps } from '../../../types/data-table';
+import type { Updater } from '@tanstack/react-table';
 
 export function DataTable<TData, TValue>({
   columns,
@@ -116,7 +99,9 @@ export function DataTable<TData, TValue>({
   const [firingType, setFiringType] = useState('');
   const [cost, setCost] = useState('0.00');
 
-  const openDialogWithRowData = (rowData) => {
+  console.log(account);
+
+  const openDialogWithRowData = (rowData: KilnRequest) => {
     setRecordId(rowData.id);
     setFirstName(rowData.first_name);
     setLastName(rowData.last_name);
@@ -130,7 +115,7 @@ export function DataTable<TData, TValue>({
     setIsDialogOpen(true);
   };
 
-  const handleReprint = async (rowData) => {
+  const handleReprint = async (rowData: KilnRequest) => {
     if (!rowData) return;
     const check = await checkForDuplicate(rowData.account_id, rowData);
     if (check) {
@@ -143,7 +128,7 @@ export function DataTable<TData, TValue>({
     }
   };
 
-  const handleImageOpen = (imageUrl) => {
+  const handleImageOpen = (imageUrl: string) => {
     if (!imageUrl) return;
     setImageUrl(imageUrl);
     setIsImageOpen(true);
@@ -160,10 +145,31 @@ export function DataTable<TData, TValue>({
       handleImageOpen,
     },
     state: { pagination: { pageIndex, pageSize } },
-    onPaginationChange: ({ pageIndex, pageSize }) => {
-      setPageIndex(pageIndex);
-      setPageSize(pageSize);
+    onPaginationChange: (
+      updaterOrValue: Updater<{ pageIndex: number; pageSize: number }>
+    ) => {
+      if (typeof updaterOrValue === 'function') {
+        const newPagination = updaterOrValue({ pageIndex, pageSize });
+        setPageIndex(newPagination.pageIndex);
+        setPageSize(newPagination.pageSize);
+      } else {
+        setPageIndex(updaterOrValue.pageIndex);
+        setPageSize(updaterOrValue.pageSize);
+      }
     },
+    // onPaginationChange: (pagination: { pageIndex: number; pageSize: number }) => {
+    //   setPageIndex(pagination.pageIndex);
+    //   setPageSize(pagination.pageSize);
+    // },
+    // onPaginationChange: (updaterOrValue: Updater<PaginationState>) => {
+    //   if (typeof updaterOrValue === 'function') {
+    //     // setPageIndex((old) => updaterOrValue({ pageIndex: old, pageSize }).pageIndex);
+    //     // setPageSize((old) => updaterOrValue({ pageIndex, pageSize: old }).pageSize);
+    //   } else {
+    //     setPageIndex(updaterOrValue.pageIndex);
+    //     setPageSize(updaterOrValue.pageSize);
+    //   }
+    // },
     manualPagination: true, // Enable manual pagination
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -191,13 +197,16 @@ export function DataTable<TData, TValue>({
     setCost((baseCost * unitCost * quantity).toFixed(2));
   }, [length, width, height, quantity, nonMember, account]);
 
-  const onRowUpdate = (rowId, newRowData) => {
-    setData((oldData) =>
+  const onRowUpdate = (rowId: string, newRowData: KilnRequest) => {
+    setData((oldData: KilnRequest[]) =>
       oldData.map((row) => (row.id === rowId ? newRowData : row))
     );
   };
 
-  const handleUpdateKilnRequest = async (prevState, formData) => {
+  const handleUpdateKilnRequest = async (
+    prevState: any,
+    formData: FormData
+  ) => {
     try {
       const updatedData = await updateKilnRequest(prevState, formData);
 
@@ -205,10 +214,12 @@ export function DataTable<TData, TValue>({
       handleCloseDialog();
       toast.success('Successfully updated record!');
     } catch (error) {
-      toast.error('Error updating record!', {
-        description: error.message,
-      });
-      console.error('Error updating row:', error);
+      if (error instanceof Error) {
+        toast.error('Error updating record!', {
+          description: error.message,
+        });
+        console.error('Error updating row:', error);
+      }
     }
   };
 
@@ -283,6 +294,9 @@ export function DataTable<TData, TValue>({
             <SelectContent>
               {columns.map((option) => {
                 if (
+                  'accessorKey' in option &&
+                  typeof option.accessorKey === 'string' &&
+                  typeof option.header === 'string' &&
                   ['first_name', 'last_name', 'email', 'firing_type'].includes(
                     option.accessorKey
                   )
@@ -434,7 +448,7 @@ export function DataTable<TData, TValue>({
                       </Popover>
                     </span>
                   </span>
-                  <span className='flex gap-2'>
+                  <span className='flex flex-row items-center gap-2'>
                     <Label
                       className='self-center'
                       htmlFor='includeExportedToggle'
@@ -445,19 +459,42 @@ export function DataTable<TData, TValue>({
                       checked={filterExported}
                       onCheckedChange={setFilterExported}
                     />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info />
+                        </TooltipTrigger>
+                        <TooltipContent side='right'>
+                          <p className='text-xs'>
+                            when toggled on, we will only export records that
+                            have not been exported yet
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </span>
 
-                  <span className='flex gap-2'>
-                    <Label
-                      className='self-center'
-                      htmlFor='exportTotalsToggle'
-                    >
+                  <span className='flex flex-row items-center gap-2'>
+                    <Label className='self-center' htmlFor='exportTotalsToggle'>
                       Export Totals?:
                     </Label>
                     <Switch
                       checked={exportTotals}
                       onCheckedChange={setExportTotals}
                     />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info />
+                        </TooltipTrigger>
+                        <TooltipContent side='right'>
+                          <p className='text-xs'>
+                            when toggled on, we will include another csv that
+                            shows you totals grouped by name
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </span>
                 </span>
               </DialogDescription>

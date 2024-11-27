@@ -17,9 +17,9 @@ export default async function ManageTeams() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Teams</CardTitle>
+                <CardTitle>Printers</CardTitle>
                 <CardDescription>
-                    These are the teams you belong to
+                    These are the printers you manage 
                 </CardDescription>
             </CardHeader>
             <CardContent>

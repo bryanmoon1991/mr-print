@@ -9,6 +9,8 @@ import { addDays, format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { useTeamAccount } from '../teamAccountProvider';
 import { parse, unparse } from 'papaparse';
+import type { KilnRequest, GroupedData } from './types';
+import type { Updater } from '@tanstack/react-table'
 
 export default function PrintJobsPage() {
   const supabaseClient = createClient();
@@ -20,15 +22,15 @@ export default function PrintJobsPage() {
   // }, [teamAccount])
 
   // Define pagination and filter state
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
-  const [data, setData] = useState([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [exportedFilter, setExportedFilter] = useState(false); // Default to 'exported' being false
-  const [filter, setFilter] = useState('');
-  const [filterColumn, setFilterColumn] = useState('');
-  const [filterExported, setFilterExported] = useState(true);
-  const [exportTotals, setExportTotals] = useState(true);
+  const [pageIndex, setPageIndex] = useState<number>(0);
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [data, setData] = useState<KilnRequest[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [exportedFilter, setExportedFilter] = useState<boolean>(false); // Default to 'exported' being false
+  const [filter, setFilter] = useState<string>('');
+  const [filterColumn, setFilterColumn] = useState<string>('');
+  const [filterExported, setFilterExported] = useState<boolean>(true);
+  const [exportTotals, setExportTotals] = useState<boolean>(true);
   const [date, setDate] = useState<DateRange | undefined>({
     from: addDays(new Date(), -30), // One month ago from today
     to: new Date(), // Today's date
@@ -99,16 +101,16 @@ export default function PrintJobsPage() {
         query = query.eq('exported', !filterExported);
       }
 
-      query = query.csv();
-      const { data: exportData, error } = await query;
-
+      const csvQuery = query.csv();
+      const { data: exportData, error } = await csvQuery;
+  
       if (error) {
         toast.error('Error exporting data:', { description: error.message });
         console.error('Error exporting data:', error);
         return;
       }
 
-      let parsed = parse(exportData, { header: true });
+      let parsed = parse<KilnRequest>(exportData, { header: true });
 
       const transformedData = parsed.data.map((row) => ({
         ...row,
@@ -132,7 +134,7 @@ export default function PrintJobsPage() {
     day: '2-digit',
   });
 
-  const generateFile = (csvData) => {
+  const generateFile = (csvData: string) => {
     const blob = new Blob([csvData], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -182,9 +184,9 @@ export default function PrintJobsPage() {
     }
   };
 
-  const generateGroupedCsv = (parsedData) => {
+  const generateGroupedCsv = (parsedData: KilnRequest[]) => {
     // Group data by first and last name
-    const groupedDataMap = parsedData.reduce((acc, row) => {
+    const groupedDataMap = parsedData.reduce<GroupedData>((acc, row) => {
       const fullName = `${row.first_name} ${row.last_name}`.trim();
 
       if (!acc[fullName]) {
@@ -202,7 +204,7 @@ export default function PrintJobsPage() {
       acc[fullName].cost += cost;
 
       // Sum up the quantity
-      const quantity = parseInt(row.quantity, 10) || 0;
+      const quantity = parseInt(row.quantity.toString(), 10) || 0;
       acc[fullName].total_quantity += quantity;
 
       // Update date range
@@ -227,9 +229,15 @@ export default function PrintJobsPage() {
     const groupedData = Object.values(groupedDataMap).map((entry) => ({
       ...entry,
       cost: `$${entry.cost.toFixed(2)}`, // Format the cost as currency
-      date_range: `${entry.date_range.earliest.toLocaleString(
-        'en-US'
-      )} to ${entry.date_range.latest.toLocaleString('en-US')}`, // Format date range
+      date_range: `${
+        entry.date_range.earliest
+          ? entry.date_range.earliest.toLocaleString('en-US')
+          : 'N/A'
+      } to ${
+        entry.date_range.latest
+          ? entry.date_range.latest.toLocaleString('en-US')
+          : 'N/A'
+      }`, // Format date range
     }));
 
     // Convert grouped data back to CSV

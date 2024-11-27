@@ -10,11 +10,11 @@ export default function NewTeamForm() {
         <form className="animate-in flex-1 flex flex-col w-full justify-center gap-y-6 text-foreground">
             <div className="flex flex-col gap-y-2">
                 <Label htmlFor="name">
-                    Team Name
+                    Printer Name
                 </Label>
                 <Input
                     name="name"
-                    placeholder="My Team"
+                    placeholder="My printer"
                     required
                 />
             </div>
@@ -37,7 +37,7 @@ export default function NewTeamForm() {
                 formAction={createTeam}
                 pendingText="Creating..."
             >
-                Create team
+                Create Printer
             </SubmitButton>
         </form>
     )

@@ -1,6 +1,6 @@
 'use client';
 
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, TableMeta } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { KilnRequest } from './types';
@@ -12,13 +12,19 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 
-export const columns: ColumnDef<KilnRequest>[] = [
+interface CustomTableMeta extends TableMeta<KilnRequest> {
+  handleReprint: (record: KilnRequest) => void;
+  handleImageOpen: (url: string) => void;
+  openDialogWithRowData: (record: KilnRequest) => void;
+}
+
+export const columns: ColumnDef<KilnRequest, CustomTableMeta>[] = [
   {
     accessorKey: 'created_at',
     header: 'Created At',
     cell: ({ row }) => {
       const date = row.getValue('created_at');
-      return new Date(date).toLocaleString('en-US');
+      return new Date(date as string).toLocaleString('en-US');
     },
   },
   {
@@ -74,9 +80,10 @@ export const columns: ColumnDef<KilnRequest>[] = [
     id: 'actions',
     cell: ({ row, table }) => {
       const record = row.original;
-      const handleReprint = table?.options?.meta?.handleReprint
-      const handleImageOpen = table?.options?.meta?.handleImageOpen
-      const openDialogWithRowData = table?.options?.meta?.openDialogWithRowData
+      const meta = table?.options?.meta as CustomTableMeta;
+      const handleReprint = meta?.handleReprint;
+      const handleImageOpen = meta?.handleImageOpen;
+      const openDialogWithRowData = meta?.openDialogWithRowData;
 
       return (
         <>
@@ -88,7 +95,7 @@ export const columns: ColumnDef<KilnRequest>[] = [
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
-              <DropdownMenuItem disabled={!record.photo_url} onClick={() => handleImageOpen(record.photo_url)}>
+              <DropdownMenuItem disabled={!record.photo_url} onClick={() => record.photo_url && handleImageOpen(record.photo_url)}>
                 View Image
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleReprint(record)}>
