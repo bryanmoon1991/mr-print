@@ -9,5 +9,5 @@ export const createClient = () =>
 export const createAdminClient = () =>
   createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY!
+    process.env.NEXT_SUPABASE_SERVICE_KEY!
   );
