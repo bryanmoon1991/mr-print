@@ -2,11 +2,11 @@ import AfterForm from '@/components/user-facing/after-form'
 import { createClient } from '@/lib/supabase/server';
 
 export default async function QrFormCompletePage({
-  params: { accountSlug, accountId },
+  params,
 }: {
-  children: React.ReactNode;
-  params: { accountSlug: string, accountId: string };
+  params: { accountSlug: string; accountId: string };
 }) {
+  const { accountSlug, accountId } = params;
   const supabaseClient = createClient();
   const { data, error } = await supabaseClient.rpc(
     'get_account_metadata_by_slug',
