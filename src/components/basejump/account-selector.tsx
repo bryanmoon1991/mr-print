@@ -73,9 +73,9 @@ export default function AccountSelector({ className, accountId, onAccountSelecte
                 <PopoverContent className="w-[250px] p-0">
                     <Command>
                         <CommandList>
-                            <CommandInput placeholder="Search account..." />
+                            {/* <CommandInput placeholder="Search account..." /> */}
                             <CommandEmpty>No account found.</CommandEmpty>
-                            <CommandGroup heading="Personal Account">
+                            {/* <CommandGroup heading="Personal Account">
                                 <CommandItem
                                     key={personalAccount?.account_id}
                                     onSelect={() => {
@@ -96,7 +96,7 @@ export default function AccountSelector({ className, accountId, onAccountSelecte
                                         )}
                                     />
                                 </CommandItem>
-                            </CommandGroup>
+                            </CommandGroup> */}
                             {Boolean(teamAccounts?.length) && (
                                 <CommandGroup heading="Teams">
                                     {teamAccounts?.map((team) => (

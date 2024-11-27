@@ -36,7 +36,7 @@ import {
 import { Label } from '../ui/label';
 import { Checkbox } from './checkbox';
 import { Switch } from '@/components/ui/switch';
-import { CalendarIcon, ArrowLeft, ArrowRight } from 'lucide-react';
+import { CalendarIcon, ArrowLeft, ArrowRight, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { SubmitButton } from './submit-button';
 import { cn } from '@/lib/utils';
@@ -46,6 +46,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
 import { checkForDuplicate, reprint } from '@/lib/actions/print-requests';
 import { updateKilnRequest } from '@/lib/actions/teams';
 import { toast } from 'sonner';
@@ -92,7 +99,7 @@ export function DataTable<TData, TValue>({
   const [firingType, setFiringType] = useState('');
   const [cost, setCost] = useState('0.00');
 
-  console.log(account)
+  console.log(account);
 
   const openDialogWithRowData = (rowData: KilnRequest) => {
     setRecordId(rowData.id);
@@ -138,7 +145,9 @@ export function DataTable<TData, TValue>({
       handleImageOpen,
     },
     state: { pagination: { pageIndex, pageSize } },
-    onPaginationChange: (updaterOrValue: Updater<{ pageIndex: number; pageSize: number }>) => {
+    onPaginationChange: (
+      updaterOrValue: Updater<{ pageIndex: number; pageSize: number }>
+    ) => {
       if (typeof updaterOrValue === 'function') {
         const newPagination = updaterOrValue({ pageIndex, pageSize });
         setPageIndex(newPagination.pageIndex);
@@ -439,7 +448,7 @@ export function DataTable<TData, TValue>({
                       </Popover>
                     </span>
                   </span>
-                  <span className='flex gap-2'>
+                  <span className='flex flex-row items-center gap-2'>
                     <Label
                       className='self-center'
                       htmlFor='includeExportedToggle'
@@ -450,9 +459,22 @@ export function DataTable<TData, TValue>({
                       checked={filterExported}
                       onCheckedChange={setFilterExported}
                     />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info />
+                        </TooltipTrigger>
+                        <TooltipContent side='right'>
+                          <p className='text-xs'>
+                            when toggled on, we will only export records that
+                            have not been exported yet
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </span>
 
-                  <span className='flex gap-2'>
+                  <span className='flex flex-row items-center gap-2'>
                     <Label className='self-center' htmlFor='exportTotalsToggle'>
                       Export Totals?:
                     </Label>
@@ -460,6 +482,19 @@ export function DataTable<TData, TValue>({
                       checked={exportTotals}
                       onCheckedChange={setExportTotals}
                     />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info />
+                        </TooltipTrigger>
+                        <TooltipContent side='right'>
+                          <p className='text-xs'>
+                            when toggled on, we will include another csv that
+                            shows you totals grouped by name
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </span>
                 </span>
               </DialogDescription>
