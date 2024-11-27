@@ -3,13 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default async function QrFormPage({
-  params: { accountSlug },
-  searchParams: { accountId },
+  params,
+  searchParams,
 }: {
-  children: React.ReactNode;
   params: { accountSlug: string };
   searchParams: { accountId?: string };
 }) {
+  const { accountSlug } = params;
+  const { accountId } = searchParams;
   const supabaseClient = createClient();
   const { data, error } = await supabaseClient.rpc(
     'get_account_metadata_by_slug',
