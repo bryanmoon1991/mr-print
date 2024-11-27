@@ -137,7 +137,7 @@ export default function AccountSelector({ className, accountId, onAccountSelecte
                                         }}
                                     >
                                         <PlusCircle className="mr-2 h-5 w-5" />
-                                        Create Team
+                                        Create Printer
                                     </CommandItem>
                                 </DialogTrigger>
                             </CommandGroup>
@@ -147,9 +147,9 @@ export default function AccountSelector({ className, accountId, onAccountSelecte
             </Popover>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create a new team</DialogTitle>
+                    <DialogTitle>Create a new printer</DialogTitle>
                     <DialogDescription>
-                        Create a team to collaborate with others.
+                        Create a printer to start accepting kiln requests.
                     </DialogDescription>
                 </DialogHeader>
                 <NewTeamForm  />

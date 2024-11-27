@@ -5,7 +5,7 @@ import {Separator} from "@/components/ui/separator";
 export default function PersonalAccountSettingsPage({children}) {
     const items = [
         { name: "Profile", href: "/dashboard/settings" },
-        { name: "Teams", href: "/dashboard/settings/teams" },
+        { name: "Printers", href: "/dashboard/settings/teams" },
         // { name: "Billing", href: "/dashboard/settings/billing" },
     ]
     return (

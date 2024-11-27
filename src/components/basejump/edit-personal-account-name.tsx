@@ -17,7 +17,7 @@ export default function EditPersonalAccountName({ account }: Props) {
             <CardHeader>
                 <CardTitle>Your info</CardTitle>
                 <CardDescription>
-                    Your name is used on your personal profile as well as in your teams
+                    Your name is used on your personal profile as well as in your printer teams
                 </CardDescription>
             </CardHeader>
             <form className="animate-in flex-1 text-foreground">

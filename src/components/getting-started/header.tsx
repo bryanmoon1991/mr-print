@@ -1,6 +1,6 @@
 import NextLogo from './next-logo'
 import SupabaseLogo from './supabase-logo'
-import BasejumpLogo from "./basejump-logo";
+import BasejumpLogo from "./mr-print-logo";
 
 export default function Header() {
   return (

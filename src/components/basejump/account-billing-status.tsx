@@ -42,7 +42,7 @@ export default async function AccountBillingStatus({
       <CardHeader>
         <CardTitle>Billing Status</CardTitle>
         <CardDescription>
-          A quick overview of your billing status
+          A quick overview of this printer's billing status
         </CardDescription>
       </CardHeader>
       <CardContent>
