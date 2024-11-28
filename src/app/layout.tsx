@@ -13,8 +13,8 @@ const fontSans = FontSans({
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Basejump starter kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "Mr. Print",
+  description: "The easiest way to manage kiln request records!",
 };
 
 export default function RootLayout({
