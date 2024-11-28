@@ -3,8 +3,8 @@
  * TO SETUP ON YOUR OWN, HEAD TO https://usebasejump.com
  */
 import {serve} from "https://deno.land/std@0.168.0/http/server.ts";
-import {billingFunctionsWrapper, stripeFunctionHandler} from "https://deno.land/x/basejump@v2.0.3/billing-functions/mod.ts";
-
+// import {billingFunctionsWrapper, stripeFunctionHandler} from "https://deno.land/x/basejump@v2.0.3/billing-functions/mod.ts";
+import {billingFunctionsWrapper, stripeFunctionHandler} from "https://raw.githubusercontent.com/bryanmoon1991/basejump-deno-packages/refs/heads/main/billing-functions/mod.ts";
 import Stripe from "https://esm.sh/stripe@11.1.0?target=deno";
 
 const defaultAllowedHost = Deno.env.get("ALLOWED_HOST") || "http://localhost:3000";
