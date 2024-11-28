@@ -18,7 +18,6 @@ export async function setupNewSubscription(prevState: any, formData: FormData) {
           account_id: accountId,
           success_url: returnUrl,
           cancel_url: returnUrl,
-          allow_promotion_codes: true,
         },
       },
     }
