@@ -2,19 +2,20 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  // The `/auth/callback` route is required for the server-side auth flow implemented
-  // by the SSR package. It exchanges an auth code for the user's session.
-  // https://supabase.com/docs/guides/auth/server-side/nextjs
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const returnUrl = requestUrl.searchParams.get("returnUrl");
-  const origin = requestUrl.origin;
 
-  console.log('IN callback route')
-  console.log('requestUrl', requestUrl)
-  console.log('code', code)
-  console.log('returnUrl', returnUrl)
-  console.log('origin', origin)
+  // Use the Host header to construct the correct origin
+  const host = request.headers.get("host"); // e.g., mrprint.app
+  const protocol = host?.includes("localhost") ? "http" : "https"; // Default to https in production
+  const origin = `${protocol}://${host}`;
+
+  console.log('IN callback route');
+  console.log('requestUrl', requestUrl);
+  console.log('code', code);
+  console.log('returnUrl', returnUrl);
+  console.log('origin', origin);
 
   if (code) {
     const supabase = createClient();
@@ -22,5 +23,5 @@ export async function GET(request: Request) {
   }
 
   // URL to redirect to after sign up process completes
-  return NextResponse.redirect([origin, returnUrl || '/dashboard'].join(''));
+  return NextResponse.redirect(`${origin}${returnUrl || '/dashboard'}`);
 }
