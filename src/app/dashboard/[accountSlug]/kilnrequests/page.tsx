@@ -18,7 +18,7 @@ export default function PrintJobsPage() {
   const teamAccount = useTeamAccount();
 
   // useEffect(() => {
-  //   console.log('in print jobs page', teamAccount)
+  //   // console.log('in print jobs page', teamAccount)
   // }, [teamAccount])
 
   // Define pagination and filter state
@@ -69,8 +69,8 @@ export default function PrintJobsPage() {
   }, [pageIndex, pageSize, exportedFilter, filter, filterColumn]);
 
   const exportData = async () => {
-    console.log('here');
-    console.log('hit', date);
+    // console.log('here');
+    // console.log('hit', date);
     if (date && date.from && date.to) {
       let from = new Date(date.from).toISOString();
       const toDate = new Date(date.to); // Parse the input
@@ -87,12 +87,12 @@ export default function PrintJobsPage() {
       // date values are converted back to UTC and always have a time of 00:00:00
       // this means that a selected date is always right at the start of the date
       // if a user wishes to grab data up to a specific date, they need to add a day to the selected date
-      console.log('from', from);
-      console.log('to', to);
+      // console.log('from', from);
+      // console.log('to', to);
       let query = supabaseClient
         .from('kiln_requests')
         .select(
-          'created_at, first_name, last_name, email, length, width, height, quantity, cost, firing_type, photo_url, non_member, printed, exported'
+          'created_at, first_name, last_name, email, length, width, height, rounded_length, rounded_width, rounded_height, quantity, cost, firing_type, photo_url, non_member, printed, exported'
         )
         .gte('created_at', from)
         .lte('created_at', to);

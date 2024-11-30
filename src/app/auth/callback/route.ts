@@ -11,11 +11,11 @@ export async function GET(request: Request) {
   const protocol = host?.includes("localhost") ? "http" : "https"; // Default to https in production
   const origin = `${protocol}://${host}`;
 
-  console.log('IN callback route');
-  console.log('requestUrl', requestUrl);
-  console.log('code', code);
-  console.log('returnUrl', returnUrl);
-  console.log('origin', origin);
+  // console.log('IN callback route');
+  // console.log('requestUrl', requestUrl);
+  // console.log('code', code);
+  // console.log('returnUrl', returnUrl);
+  // console.log('origin', origin);
 
   if (code) {
     const supabase = createClient();

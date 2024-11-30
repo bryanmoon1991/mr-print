@@ -47,8 +47,9 @@ export type Account = {
       required: boolean;
     };
     member_cost: number;
-    firing_types: string[];
     non_member_cost: number;
+    minimum_cost: number;
+    firing_types: string[];
     terms_and_conditions: string;
   };
 };

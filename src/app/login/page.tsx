@@ -39,7 +39,7 @@ export default function Login({
         ? process.env.NEXT_PUBLIC_URL
         : headers().get('origin');
     // const origin = headers().get("origin");
-    console.log('origin', origin)
+    // console.log('origin', origin)
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const supabase = createClient();
@@ -53,7 +53,7 @@ export default function Login({
     });
 
     if (error) {
-      console.log('HERE', error);
+      // console.log('HERE', error);
       return redirect(
         `/login?message=Could not authenticate user&returnUrl=${searchParams.returnUrl}`
       );

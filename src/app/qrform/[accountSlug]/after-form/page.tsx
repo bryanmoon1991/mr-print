@@ -16,7 +16,7 @@ export default async function QrFormCompletePage({
   if (error) {
     console.error('Error:', error);
   } else {
-    console.log('HERE', data);
+    // console.log('HERE', data);
   }
 
   return (

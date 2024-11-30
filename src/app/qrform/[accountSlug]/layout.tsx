@@ -19,7 +19,7 @@ export default async function TeamAccountLayout({
   // if (error) {
   //   console.error('Error:', error);
   // } else {
-  //   console.log('HERE', data);
+  //   // console.log('HERE', data);
   // }
 
 

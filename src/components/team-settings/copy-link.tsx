@@ -18,7 +18,7 @@ export default function CopyLink({teamAccount}: CopyLinkProps) {
         process.env.NEXT_PUBLIC_URL + `/api/webhook/${teamAccount.account_id}`
       )
       .then(() => {
-        console.log('Link copied to clipboard');
+        // console.log('Link copied to clipboard');
         toast.success('URL copied to clipboard!');
       })
       .catch((error) => {

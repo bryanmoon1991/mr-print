@@ -24,7 +24,7 @@ import {
   CardTitle,
 } from '../ui/card';
 import { Button } from '../ui/button';
-import { Upload, Loader2, X, AlertCircle } from 'lucide-react';
+import { Upload, Loader2, X, AlertCircle, InfoIcon } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -34,7 +34,9 @@ interface Metadata {
   };
   member_cost: number;
   non_member_cost: number;
+  minimum_cost: number;
   firing_types: string[];
+  terms_and_conditions: string;
 }
 
 interface FormProps {
@@ -54,6 +56,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const id = useId();
   const [accountId, setAccountId] = useState<string | null>(null);
 
+  console.log('min cost', metadata.minimum_cost, typeof metadata.minimum_cost);
   useEffect(() => {
     const id = searchParams.get('accountId');
     if (id) {
@@ -67,6 +70,9 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [length, setLength] = useState<number | ''>(0);
   const [width, setWidth] = useState<number | ''>(0);
   const [height, setHeight] = useState<number | ''>(0);
+  const [roundedLength, setRoundedLength] = useState<number | ''>(0);
+  const [roundedWidth, setRoundedWidth] = useState<number | ''>(0);
+  const [roundedHeight, setRoundedHeight] = useState<number | ''>(0);
   const [quantity, setQuantity] = useState<number>(1);
   const [nonMember, setNonMember] = useState<boolean>(false);
   const [firingType, setFiringType] = useState<string>(
@@ -79,8 +85,8 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [uploaded, setUploaded] = useState<string>('');
 
   useEffect(() => {
-    if (length && width && height) {
-      const baseCost = length * width * height;
+    if (roundedLength && roundedWidth && roundedHeight) {
+      const baseCost = roundedLength * roundedWidth * roundedHeight;
       const unitCost = nonMember
         ? metadata.non_member_cost
         : metadata.member_cost;
@@ -88,7 +94,14 @@ export default function KilnRequestForm({ metadata }: FormProps) {
 
       setCost(calcCost);
     }
-  }, [length, width, height, quantity, nonMember, metadata]);
+  }, [
+    roundedLength,
+    roundedWidth,
+    roundedHeight,
+    quantity,
+    nonMember,
+    metadata,
+  ]);
 
   const handleOptInChecked = (checked: boolean) => {
     setOptIn(checked);
@@ -156,6 +169,32 @@ export default function KilnRequestForm({ metadata }: FormProps) {
         <input type='hidden' name='accountId' value={accountId || ''} />
         <CardContent className='flex flex-col gap-y-6'>
           <div className='flex flex-col items-start gap-y-4'>
+            <Alert>
+              <InfoIcon className='h-4 w-4' />
+              <AlertTitle>Terms & Conditions</AlertTitle>
+              <AlertDescription>
+                <span>{metadata.terms_and_conditions}</span>
+              </AlertDescription>
+            </Alert>
+
+            {metadata.opt_in.required && (
+              <div className='flex items-center space-x-2'>
+                <Label
+                  htmlFor='opt_in'
+                  className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                >
+                  Opt-in
+                </Label>
+                <Checkbox
+                  id='opt_in'
+                  name='opt_in'
+                  checked={optIn}
+                  onCheckedChange={handleOptInChecked}
+                  required={metadata.opt_in.required}
+                />
+              </div>
+            )}
+
             <Label htmlFor='first_name'>First Name</Label>
             <Input
               type='text'
@@ -176,30 +215,20 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               required
             />
 
-            {metadata.opt_in.required && (
-              <div className='flex items-center space-x-2'>
-                <Label
-                  htmlFor='opt_in'
-                  className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-                >
-                  Opt-in
-                </Label>
-                <Checkbox
-                  id='opt_in'
-                  name='opt_in'
-                  checked={optIn}
-                  onCheckedChange={handleOptInChecked}
-                />
-              </div>
-            )}
-
             <Label htmlFor='length'>Length</Label>
             <Input
               type='number'
               id='length'
               name='length'
               value={length}
-              onChange={(e) => setLength(Number(e.target.value))}
+              onChange={(e) => {
+                setLength(Number(e.target.value));
+                setRoundedLength(
+                  Number(e.target.value) < 2
+                    ? 2
+                    : Math.ceil(Number(e.target.value) * 2) / 2
+                );
+              }}
               onFocus={(e) => {
                 if (height === 0) {
                   setLength('');
@@ -219,7 +248,14 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               id='width'
               name='width'
               value={width}
-              onChange={(e) => setWidth(Number(e.target.value))}
+              onChange={(e) => {
+                setWidth(Number(e.target.value));
+                setRoundedWidth(
+                  Number(e.target.value) < 2
+                    ? 2
+                    : Math.ceil(Number(e.target.value) * 2) / 2
+                );
+              }}
               onFocus={(e) => {
                 if (height === 0) {
                   setWidth('');
@@ -239,7 +275,14 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               id='height'
               name='height'
               value={height}
-              onChange={(e) => setHeight(Number(e.target.value))}
+              onChange={(e) => {
+                setHeight(Number(e.target.value));
+                setRoundedHeight(
+                  Number(e.target.value) < 2
+                    ? 2
+                    : Math.ceil(Number(e.target.value) * 2) / 2
+                );
+              }}
               onFocus={(e) => {
                 if (height === 0) {
                   setHeight('');
@@ -362,13 +405,39 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                 </div>
               )}
             </div>
-
+            <input type='hidden' name='roundedLength' value={roundedLength} />
+            <input type='hidden' name='roundedWidth' value={roundedWidth} />
+            <input type='hidden' name='roundedHeight' value={roundedHeight} />
+            {roundedLength &&
+              roundedWidth &&
+              roundedHeight &&
+              quantity &&
+              cost && (
+                <div className='w-full text-xs text-right'>
+                  <span className=''>
+                    Rounded Length:<strong>{roundedLength}</strong> x Rounded
+                    Width:
+                    <strong>{roundedWidth}</strong> x Rounded Height:
+                    <strong>{roundedHeight}</strong> <br />x{' '}
+                    {nonMember ? 'Non-Member Cost:' : 'Member Cost:'}
+                    <strong>
+                      {nonMember
+                        ? metadata.non_member_cost
+                        : metadata.member_cost}
+                    </strong>{' '}
+                    x Quantity:<strong>{quantity}</strong> ={' '}
+                    <strong>${cost}</strong>
+                  </span>
+                </div>
+              )}
             <Label htmlFor='cost'>Cost</Label>
             <Input
               type='number'
               id='cost'
               name='cost'
-              value={cost < 2 ? 2 : cost}
+              value={
+                cost < metadata.minimum_cost ? metadata.minimum_cost : cost
+              }
               readOnly
             />
           </div>

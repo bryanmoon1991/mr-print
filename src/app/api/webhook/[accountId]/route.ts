@@ -17,7 +17,7 @@ export async function POST(
   const httpRequest = webhookData?.ConnectionType;
 
   if (httpRequest === 'GetRequest') {
-    console.log('in get request');
+    // console.log('in get request');
     try {
       const queue = await QueueManager.getJobs(accountId);
       if (queue.length > 0) {
@@ -41,14 +41,14 @@ export async function POST(
       return NextResponse.json({ success: false }, { status: 400 });
     }
   } else if (httpRequest === 'SetResponse') {
-    console.log('in set response');
+    // console.log('in set response');
     try {
       const queue = await QueueManager.getJobs(accountId);
       if (queue.length > 0) {
         const justPrinted = queue[0];
-        console.log('justPrinted', justPrinted);
+        // console.log('justPrinted', justPrinted);
         const recordId = justPrinted['id'];
-        console.log('recordID', recordId);
+        // console.log('recordID', recordId);
         await QueueManager.removeJob(
           accountId,
           justPrinted,
@@ -96,7 +96,7 @@ async function convertImageToCustomFormat(
   width = height;
   height = temp;
 
-  console.log(`Original dimensions: width=${width}, height=${height}`);
+  // console.log(`Original dimensions: width=${width}, height=${height}`);
 
   // Step 1: Resize the image if needed
   if (width > widthScale) {
@@ -104,7 +104,7 @@ async function convertImageToCustomFormat(
     width = widthScale;
     height = Math.round(height * scaleFactor);
 
-    console.log(`Resized dimensions: width=${width}, height=${height}`);
+    // console.log(`Resized dimensions: width=${width}, height=${height}`);
 
     image.resize(width, height, { fit: 'contain' });
   }
@@ -224,7 +224,7 @@ async function generateEposXML(data: any) {
       <text reverse="false" ul="true" em="false" color="color_1"/>
       <text>Dimensions:</text>
       <text reverse="false" ul="false" em="false" color="color_1"/>
-      <text> ${data.length}in x ${data.width}in x ${data.height}in &#10;</text>
+      <text> ${data.rounded_length}in x ${data.rounded_width}in x ${data.rounded_height}in &#10;</text>
       <text reverse="false" ul="true" em="false" color="color_1"/>
       <text>Quantity:</text>
       <text reverse="false" ul="false" em="false" color="color_1"/>

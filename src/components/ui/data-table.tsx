@@ -91,15 +91,18 @@ export function DataTable<TData, TValue>({
   const [recordId, setRecordId] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [length, setLength] = useState(0);
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
+  const [length, setLength] = useState<number | ''>(0);
+  const [width, setWidth] = useState<number | ''>(0);
+  const [height, setHeight] = useState<number | ''>(0);
+  const [roundedLength, setRoundedLength] = useState(0);
+  const [roundedWidth, setRoundedWidth] = useState(0);
+  const [roundedHeight, setRoundedHeight] = useState(0);
   const [quantity, setQuantity] = useState(0);
   const [nonMember, setNonMember] = useState(false);
   const [firingType, setFiringType] = useState('');
-  const [cost, setCost] = useState('0.00');
+  const [cost, setCost] = useState(0);
 
-  console.log(account);
+  // console.log(account);
 
   const openDialogWithRowData = (rowData: KilnRequest) => {
     setRecordId(rowData.id);
@@ -108,10 +111,13 @@ export function DataTable<TData, TValue>({
     setLength(rowData.length);
     setWidth(rowData.width);
     setHeight(rowData.height);
+    setRoundedLength(rowData.rounded_length);
+    setRoundedWidth(rowData.rounded_width);
+    setRoundedHeight(rowData.rounded_height);
     setQuantity(rowData.quantity);
     setNonMember(rowData.non_member || false);
     setFiringType(rowData.firing_type);
-    setCost(rowData.cost);
+    setCost(Number(rowData.cost));
     setIsDialogOpen(true);
   };
 
@@ -190,12 +196,19 @@ export function DataTable<TData, TValue>({
 
   useEffect(() => {
     if (!account.metadata) return;
-    const baseCost = length * width * height;
+    const baseCost = roundedLength * roundedWidth * roundedHeight;
     const unitCost = nonMember
       ? account.metadata.non_member_cost
       : account.metadata.member_cost;
-    setCost((baseCost * unitCost * quantity).toFixed(2));
-  }, [length, width, height, quantity, nonMember, account]);
+    setCost(Number((baseCost * unitCost * quantity).toFixed(2)));
+  }, [
+    roundedLength,
+    roundedWidth,
+    roundedHeight,
+    quantity,
+    nonMember,
+    account,
+  ]);
 
   const onRowUpdate = (rowId: string, newRowData: KilnRequest) => {
     setData((oldData: KilnRequest[]) =>
@@ -594,7 +607,24 @@ export function DataTable<TData, TValue>({
                   id='length'
                   name='length'
                   value={length}
-                  onChange={(e) => setLength(Number(e.target.value))}
+                  onFocus={(e) => {
+                    if (height === 0) {
+                      setLength('');
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setLength(0); // Reset to 0 if the user leaves the field empty
+                    }
+                  }}
+                  onChange={(e) => {
+                    setLength(Number(e.target.value));
+                    setRoundedLength(
+                      Number(e.target.value) < 2
+                        ? 2
+                        : Math.ceil(Number(e.target.value) * 2) / 2
+                    );
+                  }}
                   className='col-span-3'
                 />
               </div>
@@ -607,7 +637,24 @@ export function DataTable<TData, TValue>({
                   id='width'
                   name='width'
                   value={width}
-                  onChange={(e) => setWidth(Number(e.target.value))}
+                  onChange={(e) => {
+                    setWidth(Number(e.target.value));
+                    setRoundedWidth(
+                      Number(e.target.value) < 2
+                        ? 2
+                        : Math.ceil(Number(e.target.value) * 2) / 2
+                    );
+                  }}
+                  onFocus={(e) => {
+                    if (height === 0) {
+                      setWidth('');
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setWidth(0); // Reset to 0 if the user leaves the field empty
+                    }
+                  }}
                   className='col-span-3'
                 />
               </div>
@@ -620,7 +667,24 @@ export function DataTable<TData, TValue>({
                   id='height'
                   name='height'
                   value={height}
-                  onChange={(e) => setHeight(Number(e.target.value))}
+                  onChange={(e) => {
+                    setHeight(Number(e.target.value));
+                    setRoundedHeight(
+                      Number(e.target.value) < 2
+                        ? 2
+                        : Math.ceil(Number(e.target.value) * 2) / 2
+                    );
+                  }}
+                  onFocus={(e) => {
+                    if (height === 0) {
+                      setHeight('');
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setHeight(0); // Reset to 0 if the user leaves the field empty
+                    }
+                  }}
                   className='col-span-3'
                 />
               </div>
@@ -638,6 +702,31 @@ export function DataTable<TData, TValue>({
                   className='col-span-3'
                 />
               </div>
+              <input type='hidden' name='roundedLength' value={roundedLength} />
+              <input type='hidden' name='roundedWidth' value={roundedWidth} />
+              <input type='hidden' name='roundedHeight' value={roundedHeight} />
+              {roundedLength &&
+                roundedWidth &&
+                roundedHeight &&
+                quantity &&
+                cost && (
+                  <div className='w-full text-xs text-right'>
+                    <span className=''>
+                      Rounded Length:<strong>{roundedLength}</strong> x Rounded
+                      Width:
+                      <strong>{roundedWidth}</strong> x Rounded Height:
+                      <strong>{roundedHeight}</strong> <br />x{' '}
+                      {nonMember ? 'Non-Member Cost:' : 'Member Cost:'}
+                      <strong>
+                        {nonMember
+                          ? account.metadata.non_member_cost
+                          : account.metadata.member_cost}
+                      </strong>{' '}
+                      x Quantity:<strong>{quantity}</strong> ={' '}
+                      <strong>${cost}</strong>
+                    </span>
+                  </div>
+                )}
               <div className='grid grid-cols-4 items-center gap-4'>
                 <Label htmlFor='cost' className='text-right'>
                   Cost
@@ -646,7 +735,11 @@ export function DataTable<TData, TValue>({
                   type='number'
                   id='cost'
                   name='cost'
-                  value={cost}
+                  value={
+                    cost < account.metadata.minimum_cost
+                      ? account.metadata.minimum_cost
+                      : cost
+                  }
                   className='col-span-3'
                   readOnly
                 />

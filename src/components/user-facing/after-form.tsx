@@ -33,6 +33,9 @@ type Record = {
   length: number;
   width: number;
   height: number;
+  rounded_length: number;
+  rounded_width: number;
+  rounded_height: number;
   quantity: number;
   cost: string;
   firing_type: string;
@@ -80,7 +83,7 @@ export default function AfterForm() {
         if (error) {
           console.error('Error fetching record:', error);
         } else {
-          console.log('fetched', data);
+          // console.log('fetched', data);
           setRecord(data);
         }
       };
@@ -124,11 +127,11 @@ export default function AfterForm() {
                 </li>
                 <li>
                   <strong>Dimensions:</strong>{' '}
-                  {record.length +
+                  {record.rounded_length +
                     'in x ' +
-                    record.width +
+                    record.rounded_width +
                     'in x ' +
-                    record.height +
+                    record.rounded_height +
                     'in'}
                 </li>
                 <li>

@@ -85,6 +85,7 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
   const generic = {
     member_cost: 0.0,
     non_member_cost: 0.0,
+    minimum_cost: 1.00,
     logo: {
       logo_url: '',
       filename: ''
@@ -93,16 +94,20 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
     opt_in: { required: false },
     terms_and_conditions: '',
   };
+  // console.log('form', formData)
 
   const member_cost = formData.get('member_cost') as string;
   const non_member_cost = formData.get('non_member_cost') as string;
-  const opt_in = formData.get('opt_in') === 'true'
+  const minimum_cost = formData.get('minimum_cost') as string;
+  const opt_in = formData.get('opt_in') === 'on' ? true : false;
   const terms_and_conditions = formData.get('terms_and_conditions') as string;
   const logo_url = formData.get('logo_url') as string;
   const filename = formData.get('filename') as string;
 
+  // console.log('opt_in', opt_in)
   generic.member_cost = +parseFloat(member_cost).toFixed(2);
   generic.non_member_cost = +parseFloat(non_member_cost).toFixed(2);
+  generic.minimum_cost = +parseFloat(minimum_cost).toFixed(2);
   generic.firing_types = getFiringTypes(Object.fromEntries(formData));
   generic.opt_in.required = opt_in
   generic.terms_and_conditions = terms_and_conditions;
@@ -125,7 +130,7 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
       message: error.message,
     };
   }
-  console.log('after', data)
+  // console.log('after', data)
   // redirect(`/dashboard/${data.slug}/settings`);
 }
 
@@ -140,6 +145,9 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   const length = formData.get('length') as string;
   const width = formData.get('width') as string;
   const height = formData.get('height') as string;
+  const roundedLength = formData.get('roundedLength') as string;
+  const roundedWidth = formData.get('roundedWidth') as string;
+  const roundedHeight = formData.get('roundedHeight') as string;
   const quantity = formData.get('quantity') as string;
   const cost = formData.get('cost') as string;
   const firingType = formData.get('firing_type') as string;
@@ -159,6 +167,9 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
         length,
         width,
         height,
+        rounded_length: roundedLength,
+        rounded_width: roundedWidth,
+        rounded_height: roundedHeight,
         quantity,
         cost,
         firing_type: firingType,
@@ -179,9 +190,9 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
 
     // Check if the job was successfully added to the Redis list
     if (result > 0) {
-      console.log('successfully added to redis')
+      // console.log('successfully added to redis')
     } else {
-      console.log('could not add to redis')
+      // console.log('could not add to redis')
     }
     // console.log('AFTER SUBMIT', data)
     redirect(`/qrform/${slug}/after-form?accountId=${accountId}&recordId=${record.id}`);
@@ -203,7 +214,7 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
   const nonMember = formData.get('non_member') as string;
   const supabase = createClient();
 
-  console.log('cost', cost)
+  // console.log('cost', cost)
 
   const { data, error } = await supabase
   .from('kiln_requests')

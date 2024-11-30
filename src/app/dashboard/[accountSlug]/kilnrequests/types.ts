@@ -8,6 +8,9 @@ export type KilnRequest = {
   length: number;
   width: number;
   height: number;
+  rounded_length: number;
+  rounded_width: number;
+  rounded_height: number;
   quantity: number;
   cost: string;
   firing_type: string;
