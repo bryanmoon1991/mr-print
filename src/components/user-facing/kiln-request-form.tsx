@@ -26,6 +26,7 @@ import {
 import { Button } from '../ui/button';
 import { Upload, Loader2, X, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Metadata {
   opt_in: {
@@ -43,7 +44,7 @@ interface FormProps {
 interface UploadResponse {
   id: string;
   fullPath: string;
-  path: string; 
+  path: string;
 }
 
 export default function KilnRequestForm({ metadata }: FormProps) {
@@ -63,12 +64,14 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
   const [optIn, setOptIn] = useState<boolean>(false);
-  const [length, setLength] = useState<number>(0);
-  const [width, setWidth] = useState<number>(0);
-  const [height, setHeight] = useState<number>(0);
+  const [length, setLength] = useState<number | ''>(0);
+  const [width, setWidth] = useState<number | ''>(0);
+  const [height, setHeight] = useState<number | ''>(0);
   const [quantity, setQuantity] = useState<number>(1);
   const [nonMember, setNonMember] = useState<boolean>(false);
-  const [firingType, setFiringType] = useState<string>(metadata.firing_types[0]);
+  const [firingType, setFiringType] = useState<string>(
+    metadata.firing_types[0]
+  );
   const [photoUrl, setPhotoUrl] = useState<string>('');
   const [cost, setCost] = useState<number>(0);
   const [error, setError] = useState<string>('');
@@ -76,15 +79,15 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [uploaded, setUploaded] = useState<string>('');
 
   useEffect(() => {
-    const baseCost = length * width * height;
-    const unitCost = nonMember
-      ? metadata.non_member_cost
-      : metadata.member_cost;
-    const calcCost = parseFloat((baseCost * unitCost * quantity).toFixed(
-      2
-    ));
+    if (length && width && height) {
+      const baseCost = length * width * height;
+      const unitCost = nonMember
+        ? metadata.non_member_cost
+        : metadata.member_cost;
+      const calcCost = parseFloat((baseCost * unitCost * quantity).toFixed(2));
 
-    setCost(calcCost);
+      setCost(calcCost);
+    }
   }, [length, width, height, quantity, nonMember, metadata]);
 
   const handleOptInChecked = (checked: boolean) => {
@@ -100,11 +103,13 @@ export default function KilnRequestForm({ metadata }: FormProps) {
 
     setUploading(true);
     setError('');
-    const fileName = `${accountId}_${firstName}_${lastName}-${file.name}`; // Create a unique filename
+    const fileName = `${accountId}_${firstName}_${lastName}-${
+      file.name
+    }-${uuidv4()}`; // Create a unique filename
     // console.log(fileName);
-    const { data, error } = await supabase.storage
+    const { data, error } = (await supabase.storage
       .from('photos') // replace 'photos' with your bucket name
-      .upload(fileName, file) as { data: UploadResponse | null, error: Error };
+      .upload(fileName, file)) as { data: UploadResponse | null; error: Error };
 
     if (error) {
       setError(error.message);
@@ -195,6 +200,16 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               name='length'
               value={length}
               onChange={(e) => setLength(Number(e.target.value))}
+              onFocus={(e) => {
+                if (height === 0) {
+                  setLength('');
+                }
+              }}
+              onBlur={(e) => {
+                if (e.target.value === '') {
+                  setLength(0); // Reset to 0 if the user leaves the field empty
+                }
+              }}
               required
             />
 
@@ -205,6 +220,16 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               name='width'
               value={width}
               onChange={(e) => setWidth(Number(e.target.value))}
+              onFocus={(e) => {
+                if (height === 0) {
+                  setWidth('');
+                }
+              }}
+              onBlur={(e) => {
+                if (e.target.value === '') {
+                  setWidth(0); // Reset to 0 if the user leaves the field empty
+                }
+              }}
               required
             />
 
@@ -215,6 +240,16 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               name='height'
               value={height}
               onChange={(e) => setHeight(Number(e.target.value))}
+              onFocus={(e) => {
+                if (height === 0) {
+                  setHeight('');
+                }
+              }}
+              onBlur={(e) => {
+                if (e.target.value === '') {
+                  setHeight(0); // Reset to 0 if the user leaves the field empty
+                }
+              }}
               required
             />
 
@@ -277,7 +312,10 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                 className='relative mb-4'
                 type='button'
               >
-                <label htmlFor='uploader' className='absolute inset-0 cursor-pointer'>
+                <label
+                  htmlFor='uploader'
+                  className='absolute inset-0 cursor-pointer'
+                >
                   <input
                     id='uploader'
                     className='absolute inset-0 size-0 opacity-0'
@@ -326,7 +364,13 @@ export default function KilnRequestForm({ metadata }: FormProps) {
             </div>
 
             <Label htmlFor='cost'>Cost</Label>
-            <Input type='number' id='cost' name='cost' value={cost} readOnly />
+            <Input
+              type='number'
+              id='cost'
+              name='cost'
+              value={cost < 2 ? 2 : cost}
+              readOnly
+            />
           </div>
         </CardContent>
         <CardFooter className='text-right'>

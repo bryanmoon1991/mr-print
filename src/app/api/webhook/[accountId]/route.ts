@@ -49,12 +49,12 @@ export async function POST(
         console.log('justPrinted', justPrinted);
         const recordId = justPrinted['id'];
         console.log('recordID', recordId);
-        const deletion = await QueueManager.removeJob(
+        await QueueManager.removeJob(
           accountId,
           justPrinted,
           recordId
         );
-        console.log('redis after delete', deletion);
+        // console.log('redis after delete', deletion);
       }
       return NextResponse.json({
         success: true,
