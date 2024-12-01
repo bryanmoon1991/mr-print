@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function Login({
   searchParams,
@@ -38,12 +39,27 @@ export default function Login({
       process.env.NODE_ENV === 'production'
         ? process.env.NEXT_PUBLIC_URL
         : headers().get('origin');
-    // const origin = headers().get("origin");
-    // console.log('origin', origin)
+
+    const minLength = 6;
+    const regex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+
+    if (password.length < minLength) {
+      return redirect(
+        `/login?message=Password must be at least 6 characters long&returnUrl=${searchParams.returnUrl}`
+      );
+    }
+
+    if (!regex.test(password)) {
+      return redirect(
+        `/login?message=Password must include at least one uppercase letter, one lowercase letter, one number, and one special character&returnUrl=${searchParams.returnUrl}`
+      );
+    }
+
     const supabase = createClient();
-    // console.log(email, password)
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -53,7 +69,6 @@ export default function Login({
     });
 
     if (error) {
-      // console.log('HERE', error);
       return redirect(
         `/login?message=Could not authenticate user&returnUrl=${searchParams.returnUrl}`
       );
@@ -88,29 +103,36 @@ export default function Login({
       </Link>
 
       <form className='animate-in flex-1 flex flex-col w-full justify-center gap-2 text-foreground'>
-        <label className='text-md' htmlFor='email'>
+        <Label className='text-md' htmlFor='email'>
           Email
-        </label>
+        </Label>
         <Input name='email' placeholder='you@example.com' required />
-        <label className='text-md' htmlFor='password'>
+        <Label className='text-md' htmlFor='email'>
           Password
-        </label>
+        </Label>
         <Input
           type='password'
           name='password'
           placeholder='••••••••'
           required
         />
-        <SubmitButton formAction={signIn} pendingText='Signing In...'>
-          Sign In
-        </SubmitButton>
-        <SubmitButton
-          formAction={signUp}
-          variant='outline'
-          pendingText='Signing Up...'
-        >
-          Sign Up
-        </SubmitButton>
+        <div className='flex flex-col gap-2'>
+          <SubmitButton
+            className='w-full'
+            formAction={signIn}
+            pendingText='Signing In...'
+          >
+            Sign In
+          </SubmitButton>
+          <SubmitButton
+            className='w-full'
+            formAction={signUp}
+            variant='outline'
+            pendingText='Signing Up...'
+          >
+            Sign Up
+          </SubmitButton>
+        </div>
         {searchParams?.message && (
           <p className='mt-4 p-4 bg-foreground/10 text-foreground text-center'>
             {searchParams.message}
