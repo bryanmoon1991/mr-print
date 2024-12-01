@@ -2,13 +2,26 @@ import Bull from 'bull';
 import RedisSingleton from '@/lib/redis/client';
 
 const redisJobQueue = new Bull('redisJobQueue', process.env.NEXT_PUBLIC_REDIS_URL!)
-// const redisJobQueue = new Bull('redisJobQueue', {
-//   redis: {
-//     host: process.env.REDIS_HOST, // Replace with your Redis configuration
-//     port: process.env.REDIS_PORT,
-//     password: process.env.REDIS_PASSWORD, // Optional
-//   },
-// });
+
+const CLEAN_INTERVAL = 60 * 60 * 1000; // 1 hour
+const MAX_JOB_AGE = 48 * 60 * 60 * 1000; // 48 hours
+
+const cleanQueue = async () => {
+  try {
+    // Clean completed jobs older than MAX_JOB_AGE
+    await redisJobQueue.clean(MAX_JOB_AGE, 'completed');
+    console.log('Cleaned completed jobs');
+
+    // Clean failed jobs older than MAX_JOB_AGE
+    await redisJobQueue.clean(MAX_JOB_AGE, 'failed');
+    console.log('Cleaned failed jobs');
+  } catch (error) {
+    console.error('Error cleaning queue:', error);
+  }
+};
+
+// Schedule the cleaning task
+setInterval(cleanQueue, CLEAN_INTERVAL);
 
 // Process the jobs in the queue for adding, removing, or updating jobs in Redis
 redisJobQueue.process(async (job) => {
