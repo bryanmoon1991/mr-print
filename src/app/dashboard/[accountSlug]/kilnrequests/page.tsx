@@ -10,18 +10,13 @@ import { DateRange } from 'react-day-picker';
 import { useTeamAccount } from '../teamAccountProvider';
 import { parse, unparse } from 'papaparse';
 import type { KilnRequest, GroupedData } from './types';
-import type { Updater } from '@tanstack/react-table'
+import type { Updater } from '@tanstack/react-table';
 
 export default function PrintJobsPage() {
   const supabaseClient = createClient();
-
   const teamAccount = useTeamAccount();
 
-  // useEffect(() => {
-  //   // console.log('in print jobs page', teamAccount)
-  // }, [teamAccount])
-
-  // Define pagination and filter state
+  const [screenWidth, setScreenWidth] = useState<number>(window.innerWidth);
   const [pageIndex, setPageIndex] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(20);
   const [data, setData] = useState<KilnRequest[]>([]);
@@ -35,6 +30,17 @@ export default function PrintJobsPage() {
     from: addDays(new Date(), -30), // One month ago from today
     to: new Date(), // Today's date
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Fetch data with pagination and filtering
   const fetchData = async () => {
@@ -103,7 +109,7 @@ export default function PrintJobsPage() {
 
       const csvQuery = query.csv();
       const { data: exportData, error } = await csvQuery;
-  
+
       if (error) {
         toast.error('Error exporting data:', { description: error.message });
         console.error('Error exporting data:', error);
@@ -259,31 +265,37 @@ export default function PrintJobsPage() {
   };
 
   return (
-    <div className='container mx-auto'>
-      <DataTable
-        columns={columns}
-        data={data}
-        setData={setData}
-        pageCount={Math.ceil(totalCount / pageSize)}
-        pageIndex={pageIndex}
-        pageSize={pageSize}
-        setPageIndex={setPageIndex}
-        setPageSize={setPageSize}
-        exportedFilter={exportedFilter}
-        setExportedFilter={setExportedFilter}
-        filter={filter}
-        setFilter={setFilter}
-        filterColumn={filterColumn}
-        setFilterColumn={setFilterColumn}
-        date={date}
-        setDate={setDate}
-        filterExported={filterExported}
-        setFilterExported={setFilterExported}
-        exportData={exportData}
-        setExportTotals={setExportTotals}
-        exportTotals={exportTotals}
-        account={teamAccount}
-      />
-    </div>
+    <>
+      {screenWidth > 768 ? (
+        <div className='container mx-auto'>
+          <DataTable
+            columns={columns}
+            data={data}
+            setData={setData}
+            pageCount={Math.ceil(totalCount / pageSize)}
+            pageIndex={pageIndex}
+            pageSize={pageSize}
+            setPageIndex={setPageIndex}
+            setPageSize={setPageSize}
+            exportedFilter={exportedFilter}
+            setExportedFilter={setExportedFilter}
+            filter={filter}
+            setFilter={setFilter}
+            filterColumn={filterColumn}
+            setFilterColumn={setFilterColumn}
+            date={date}
+            setDate={setDate}
+            filterExported={filterExported}
+            setFilterExported={setFilterExported}
+            exportData={exportData}
+            setExportTotals={setExportTotals}
+            exportTotals={exportTotals}
+            account={teamAccount}
+          />
+        </div>
+      ) : (
+        <span>sorry, you must view this page on a computer</span>
+      )}
+    </>
   );
 }

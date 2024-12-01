@@ -16,7 +16,7 @@ export default async function TeamSettingsLayout({children, params: {accountSlug
         { name: "Billing", href: `/dashboard/${accountSlug}/settings/billing` },
     ]
     return (
-        <div className="hidden space-y-6 pb-16 md:block">
+        <div className="space-y-6 pb-16">
             <DashboardTitle title="Settings" description="Manage your printer settings." />
             <Separator />
             <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0 w-full max-w-6xl mx-auto">

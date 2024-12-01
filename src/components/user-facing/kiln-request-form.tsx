@@ -178,7 +178,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
             </Alert>
 
             {metadata.opt_in.required && (
-              <div className='flex items-center space-x-2'>
+              <div className='self-end flex items-center space-x-2'>
                 <Label
                   htmlFor='opt_in'
                   className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
