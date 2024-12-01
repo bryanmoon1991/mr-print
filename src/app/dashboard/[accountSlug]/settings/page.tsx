@@ -37,7 +37,10 @@ export default async function TeamSettingsPage({
       },
     }
   );
-  // console.log('here', data.status)
+  if (error) {
+    console.error('Error fetching billing status: ', error);
+    console.error('For: ', accountSlug, teamAccount.account_id);
+  }
   const accountStatus = data.status;
 
   const generateQRCode = async (text: string) => {
@@ -45,7 +48,7 @@ export default async function TeamSettingsPage({
       const qrCodeDataUrl = await QRCode.toDataURL(text);
       return qrCodeDataUrl;
     } catch (error) {
-      console.error(error);
+      console.error('Error generating QR Code: ', error);
     }
   };
 

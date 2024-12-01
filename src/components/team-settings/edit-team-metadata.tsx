@@ -9,7 +9,7 @@ import { Upload, Loader2, X, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { editTeamMetadata } from '@/lib/actions/teams';
 import { Label } from '../ui/label';
-import { Switch } from '@/components/ui/switch'
+import { Switch } from '@/components/ui/switch';
 import { GetAccountResponse } from '@usebasejump/shared';
 import {
   Card,
@@ -39,6 +39,7 @@ type Props = {
 type ExtendedProps = Props & {
   member_cost: number;
   non_member_cost: number;
+  minimum_cost: number;
   terms_and_conditions: string;
   firing_types: string[];
 };
@@ -47,6 +48,7 @@ export interface Metadata {
   logo: { logo_url: string; filename: string };
   member_cost: number;
   non_member_cost: number;
+  minimum_cost: number;
   firing_types: string[];
   opt_in: {
     required: boolean;
@@ -57,12 +59,14 @@ export interface Metadata {
 interface UploadResponse {
   id: string;
   path: string;
-  fullPath: string
+  fullPath: string;
 }
 
 export default function EditTeamMetadata({ account }: Props) {
   const supabase = createClient();
-  const [optIn, setOptIn] = useState<boolean>(account?.metadata?.opt_in?.required || false)
+  const [optIn, setOptIn] = useState<boolean>(
+    account?.metadata?.opt_in?.required || false
+  );
   const [formData, setFormData] = useState<Metadata>(
     account.metadata as Metadata
   );
@@ -74,7 +78,6 @@ export default function EditTeamMetadata({ account }: Props) {
   );
   const [uploading, setUploading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  // console.log('og data', account.metadata);
 
   const handleUpload = async (file: File) => {
     // if a user uploads a photo and does not click save, the following data does not get written to metadata
@@ -84,17 +87,16 @@ export default function EditTeamMetadata({ account }: Props) {
 
     setUploading(true);
     setError('');
+
     const fileName = `${account.account_id}_${uuidv4()}_${file.name}`; // Create a unique filename
-    // console.log(fileName);
-    const { data, error } = await supabase.storage
-      .from('logos') // replace 'photos' with your bucket name
-      .upload(fileName, file) as {data: UploadResponse | null, error: Error};
+    const { data, error } = (await supabase.storage
+      .from('logos') 
+      .upload(fileName, file)) as { data: UploadResponse | null; error: Error };
 
     if (error) {
       setError(error.message);
-      console.error('Error uploading file:', error.message);
+      console.error('Error uploading LOGO file:', error.message);
     } else {
-      console.log('after upload', data);
       //   {
       //     "path": "0681ac17-aedd-458a-a989-b8c3366d2ead-yaro.png",
       //     "id": "4a3ed275-153d-4592-9ac5-7fc4f0eda8e0",
@@ -104,7 +106,7 @@ export default function EditTeamMetadata({ account }: Props) {
         setPhotoUrl(process.env.NEXT_PUBLIC_PUBLIC_S3_URL! + data.fullPath);
         setUploaded(data.path);
       }
-      // console.log('File uploaded successfully:', data);
+      console.log('File uploaded successfully:', data);
     }
     setUploading(false);
   };
@@ -117,14 +119,14 @@ export default function EditTeamMetadata({ account }: Props) {
 
     if (error) {
       setError(error.message);
-      console.error('Error deleting file:', error.message);
+      console.error('Error deleting LOGO file:', error.message);
     } else {
       if (data && data[0]['name'] == uploaded) {
         setUploaded('');
         setPhotoUrl('');
         setError('');
       }
-      // console.log('File deleted successfully:', data);
+      console.log('LOGO file deleted successfully:', data);
     }
   };
 
@@ -132,6 +134,7 @@ export default function EditTeamMetadata({ account }: Props) {
     'logo',
     'member_cost',
     'non_member_cost',
+    'minimum_cost',
     'firing_types',
     'opt_in',
     'terms_and_conditions',
@@ -230,16 +233,28 @@ export default function EditTeamMetadata({ account }: Props) {
       } else if (key === 'opt_in') {
         return (
           <div key={key} className='flex gap-4'>
-            <Label className='self-center' htmlFor={key}>{labelText} Required?</Label>
-            <Switch
-              // name={key}
-              // checked={value.required}
-              onCheckedChange={(val) => handleOptInChange(key as keyof Metadata, val)}
-            />
-            <input name={key} type='hidden' value={String(optIn)} />
+            <Label className='self-center' htmlFor={key}>
+              {labelText} Required?
+            </Label>
+            {typeof value === 'object' &&
+              value !== null &&
+              'required' in value && (
+                <Switch
+                  name={key}
+                  checked={value.required}
+                  onCheckedChange={(val) =>
+                    handleOptInChange(key as keyof Metadata, val)
+                  }
+                />
+              )}
+            {/* <input name={key} type='hidden' value={String(optIn)} /> */}
           </div>
         );
-      } else if (key === 'member_cost' || key === 'non_member_cost') {
+      } else if (
+        key === 'member_cost' ||
+        key === 'non_member_cost' ||
+        key === 'minimum_cost'
+      ) {
         return (
           <div key={key} className='flex flex-col gap-1'>
             <Label htmlFor={key}>{labelText}</Label>
@@ -342,12 +357,11 @@ export default function EditTeamMetadata({ account }: Props) {
   };
 
   const handleOptInChange = (key: keyof Metadata, value: boolean) => {
-    // console.log(value)
-    setOptIn(value)
+    setOptIn(value);
     setFormData((prevData) => ({
       ...prevData,
       [key]: {
-        required: value
+        required: value,
       },
     }));
   };
@@ -367,9 +381,9 @@ export default function EditTeamMetadata({ account }: Props) {
   };
 
   const handleAddArrayItem = (e: React.MouseEvent, key: keyof Metadata) => {
-    e.preventDefault()
-    addArrayItem(key)
-  }
+    e.preventDefault();
+    addArrayItem(key);
+  };
 
   return (
     <Card>

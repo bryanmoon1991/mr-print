@@ -5,23 +5,17 @@ import { createClient } from '@/lib/supabase/client';
 import { DataTable } from '@/components/ui/data-table';
 import { columns } from './kilnRequests';
 import { toast } from 'sonner';
-import { addDays, format } from 'date-fns';
+import { addDays } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { useTeamAccount } from '../teamAccountProvider';
 import { parse, unparse } from 'papaparse';
 import type { KilnRequest, GroupedData } from './types';
-import type { Updater } from '@tanstack/react-table'
 
 export default function PrintJobsPage() {
   const supabaseClient = createClient();
-
   const teamAccount = useTeamAccount();
 
-  // useEffect(() => {
-  //   console.log('in print jobs page', teamAccount)
-  // }, [teamAccount])
-
-  // Define pagination and filter state
+  const [screenWidth, setScreenWidth] = useState<number>(window.innerWidth);
   const [pageIndex, setPageIndex] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(20);
   const [data, setData] = useState<KilnRequest[]>([]);
@@ -35,6 +29,17 @@ export default function PrintJobsPage() {
     from: addDays(new Date(), -30), // One month ago from today
     to: new Date(), // Today's date
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Fetch data with pagination and filtering
   const fetchData = async () => {
@@ -69,8 +74,6 @@ export default function PrintJobsPage() {
   }, [pageIndex, pageSize, exportedFilter, filter, filterColumn]);
 
   const exportData = async () => {
-    console.log('here');
-    console.log('hit', date);
     if (date && date.from && date.to) {
       let from = new Date(date.from).toISOString();
       const toDate = new Date(date.to); // Parse the input
@@ -82,17 +85,14 @@ export default function PrintJobsPage() {
           59 * 1000 +
           999
       );
-      // console.log('after', toDate.toISOString());
       const to = toDate.toISOString();
       // date values are converted back to UTC and always have a time of 00:00:00
       // this means that a selected date is always right at the start of the date
       // if a user wishes to grab data up to a specific date, they need to add a day to the selected date
-      console.log('from', from);
-      console.log('to', to);
       let query = supabaseClient
         .from('kiln_requests')
         .select(
-          'created_at, first_name, last_name, email, length, width, height, quantity, cost, firing_type, photo_url, non_member, printed, exported'
+          'created_at, first_name, last_name, email, length, width, height, rounded_length, rounded_width, rounded_height, quantity, cost, firing_type, photo_url, non_member, printed, exported'
         )
         .gte('created_at', from)
         .lte('created_at', to);
@@ -103,7 +103,7 @@ export default function PrintJobsPage() {
 
       const csvQuery = query.csv();
       const { data: exportData, error } = await csvQuery;
-  
+
       if (error) {
         toast.error('Error exporting data:', { description: error.message });
         console.error('Error exporting data:', error);
@@ -124,6 +124,7 @@ export default function PrintJobsPage() {
       let unparsed = unparse(transformedData);
       generateFile(unparsed);
       await markAsExported();
+      // console.log('Processed export for: ', teamAccount.slug, teamAccount.account_id);
     } else {
       toast.error('Please select a valid range');
     }
@@ -162,7 +163,6 @@ export default function PrintJobsPage() {
           59 * 1000 +
           999
       );
-      // console.log('after', toDate.toISOString());
       const to = toDate.toISOString();
       const updateQuery = supabaseClient
         .from('kiln_requests')
@@ -259,31 +259,37 @@ export default function PrintJobsPage() {
   };
 
   return (
-    <div className='container mx-auto'>
-      <DataTable
-        columns={columns}
-        data={data}
-        setData={setData}
-        pageCount={Math.ceil(totalCount / pageSize)}
-        pageIndex={pageIndex}
-        pageSize={pageSize}
-        setPageIndex={setPageIndex}
-        setPageSize={setPageSize}
-        exportedFilter={exportedFilter}
-        setExportedFilter={setExportedFilter}
-        filter={filter}
-        setFilter={setFilter}
-        filterColumn={filterColumn}
-        setFilterColumn={setFilterColumn}
-        date={date}
-        setDate={setDate}
-        filterExported={filterExported}
-        setFilterExported={setFilterExported}
-        exportData={exportData}
-        setExportTotals={setExportTotals}
-        exportTotals={exportTotals}
-        account={teamAccount}
-      />
-    </div>
+    <>
+      {screenWidth > 768 ? (
+        <div className='container mx-auto'>
+          <DataTable
+            columns={columns}
+            data={data}
+            setData={setData}
+            pageCount={Math.ceil(totalCount / pageSize)}
+            pageIndex={pageIndex}
+            pageSize={pageSize}
+            setPageIndex={setPageIndex}
+            setPageSize={setPageSize}
+            exportedFilter={exportedFilter}
+            setExportedFilter={setExportedFilter}
+            filter={filter}
+            setFilter={setFilter}
+            filterColumn={filterColumn}
+            setFilterColumn={setFilterColumn}
+            date={date}
+            setDate={setDate}
+            filterExported={filterExported}
+            setFilterExported={setFilterExported}
+            exportData={exportData}
+            setExportTotals={setExportTotals}
+            exportTotals={exportTotals}
+            account={teamAccount}
+          />
+        </div>
+      ) : (
+        <span>sorry, you must view this page on a computer</span>
+      )}
+    </>
   );
 }

@@ -80,11 +80,10 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
     return firingTypes;
   }
 
-  // console.log('inSubmit', formData)
-
   const generic = {
     member_cost: 0.0,
     non_member_cost: 0.0,
+    minimum_cost: 1.00,
     logo: {
       logo_url: '',
       filename: ''
@@ -96,13 +95,15 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
 
   const member_cost = formData.get('member_cost') as string;
   const non_member_cost = formData.get('non_member_cost') as string;
-  const opt_in = formData.get('opt_in') === 'true'
+  const minimum_cost = formData.get('minimum_cost') as string;
+  const opt_in = formData.get('opt_in') === 'on' ? true : false;
   const terms_and_conditions = formData.get('terms_and_conditions') as string;
   const logo_url = formData.get('logo_url') as string;
   const filename = formData.get('filename') as string;
 
   generic.member_cost = +parseFloat(member_cost).toFixed(2);
   generic.non_member_cost = +parseFloat(non_member_cost).toFixed(2);
+  generic.minimum_cost = +parseFloat(minimum_cost).toFixed(2);
   generic.firing_types = getFiringTypes(Object.fromEntries(formData));
   generic.opt_in.required = opt_in
   generic.terms_and_conditions = terms_and_conditions;
@@ -110,10 +111,11 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
     logo_url,
     filename
   }
-  // console.log('inSubmit 2', generic)
 
   const accountId = formData.get('accountId') as string;
   const supabase = createClient();
+
+  console.log('Submitting metadata update for: ', accountId, generic)
 
   const { data, error } = await supabase.rpc('update_account', {
     public_metadata: generic,
@@ -121,11 +123,11 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
   });
 
   if (error) {
+    console.error('Error updating account metadata:', error);
     return {
       message: error.message,
     };
   }
-  console.log('after', data)
   // redirect(`/dashboard/${data.slug}/settings`);
 }
 
@@ -140,6 +142,9 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   const length = formData.get('length') as string;
   const width = formData.get('width') as string;
   const height = formData.get('height') as string;
+  const roundedLength = formData.get('roundedLength') as string;
+  const roundedWidth = formData.get('roundedWidth') as string;
+  const roundedHeight = formData.get('roundedHeight') as string;
   const quantity = formData.get('quantity') as string;
   const cost = formData.get('cost') as string;
   const firingType = formData.get('firing_type') as string;
@@ -159,6 +164,9 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
         length,
         width,
         height,
+        rounded_length: roundedLength,
+        rounded_width: roundedWidth,
+        rounded_height: roundedHeight,
         quantity,
         cost,
         firing_type: firingType,
@@ -179,11 +187,10 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
 
     // Check if the job was successfully added to the Redis list
     if (result > 0) {
-      console.log('successfully added to redis')
+      console.log('Successfully added to redis queue: ', accountId, record)
     } else {
-      console.log('could not add to redis')
+      console.error('Could not add to redis queue: ', accountId, record)
     }
-    // console.log('AFTER SUBMIT', data)
     redirect(`/qrform/${slug}/after-form?accountId=${accountId}&recordId=${record.id}`);
   }
 }
@@ -197,13 +204,14 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
   const length = formData.get('length') as string;
   const width = formData.get('width') as string;
   const height = formData.get('height') as string;
+  const roundedLength = formData.get('roundedLength') as string;
+  const roundedWidth = formData.get('roundedWidth') as string;
+  const roundedHeight = formData.get('roundedHeight') as string;
   const quantity = formData.get('quantity') as string;
   const cost = formData.get('cost') as string;
   const firingType = formData.get('firing_type') as string;
   const nonMember = formData.get('non_member') as string;
   const supabase = createClient();
-
-  console.log('cost', cost)
 
   const { data, error } = await supabase
   .from('kiln_requests')
@@ -213,6 +221,9 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
     length,
     width,
     height,
+    rounded_length: roundedLength,
+    rounded_width: roundedWidth,
+    rounded_height: roundedHeight,
     quantity,
     cost,
     firing_type: firingType,
@@ -222,11 +233,13 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
   .select()
 
   if (error) {
+    console.error('Error updating kiln request with ID: ', id, error);
     return {
       message: error.message,
     };
   } else {
     const record = data[0]
+    console.log('Successfully updated kiln request with ID: ', id, record)
     return record
   }
 }

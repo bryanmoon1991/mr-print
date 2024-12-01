@@ -1,7 +1,7 @@
 'use client';
 
 import { ColumnDef, TableMeta } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, RollerCoaster } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { KilnRequest } from './types';
 import {
@@ -44,17 +44,37 @@ export const columns: ColumnDef<KilnRequest, CustomTableMeta>[] = [
     header: 'Non Member',
   },
   {
-    accessorKey: 'length',
-    header: 'Length',
+    header: 'Dimensions',
+    cell: ({ row }) => {
+      const record = row.original 
+      const length = record.length;
+      const width = record.width
+      const height = record.height
+      return `${length}" x ${width}" x ${height}"`;
+    }
   },
   {
-    accessorKey: 'width',
-    header: 'Width',
+    header: 'Rounded Dimensions',
+    cell: ({ row }) => {
+      const record = row.original
+      const length = record.rounded_length
+      const width = record.rounded_width
+      const height = record.rounded_height
+      return `${length}" x ${width}" x ${height}"`;
+    }
   },
-  {
-    accessorKey: 'height',
-    header: 'Height',
-  },
+  // {
+  //   accessorKey: 'length',
+  //   header: 'Length',
+  // },
+  // {
+  //   accessorKey: 'width',
+  //   header: 'Width',
+  // },
+  // {
+  //   accessorKey: 'height',
+  //   header: 'Height',
+  // },
   {
     accessorKey: 'quantity',
     header: 'Quantity',

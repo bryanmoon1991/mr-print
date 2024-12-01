@@ -35,14 +35,14 @@ class RedisSingleton {
       .eq('id', recordId); // Match the record by its ID
 
     if (!error) {
-      console.log('successfully marked as printed on supabase');
+      console.log('Record successfully marked as printed on Supabase: ', recordId);
       const redis = RedisSingleton.getInstance();
       await redis.lrem(
         `print_jobs:${accountId}`,
         1,
         JSON.stringify(jobToRemove)
       ); // Remove one instance of the job from the list
-      console.log('successfully removed from queue');
+      console.log('Successfully removed from redis queue: ', accountId, jobToRemove);
     }
   }
 
@@ -53,6 +53,7 @@ class RedisSingleton {
       `print_jobs:${accountId}`,
       JSON.stringify(job)
     ); // Add job to the end of the list
+    console.log('Successfully added job to redis queue: ', accountId, job);
     return result;
   }
 
