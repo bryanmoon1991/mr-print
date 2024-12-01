@@ -9,12 +9,7 @@ const MAX_JOB_AGE = 48 * 60 * 60 * 1000; // 48 hours
 const cleanQueue = async () => {
   try {
     // Clean completed jobs older than MAX_JOB_AGE
-    await redisJobQueue.clean(MAX_JOB_AGE, 'completed');
-    console.log('Cleaned completed jobs');
-
-    // Clean failed jobs older than MAX_JOB_AGE
-    await redisJobQueue.clean(MAX_JOB_AGE, 'failed');
-    console.log('Cleaned failed jobs');
+    await redisJobQueue.clean(MAX_JOB_AGE);
   } catch (error) {
     console.error('Error cleaning queue:', error);
   }
@@ -22,6 +17,9 @@ const cleanQueue = async () => {
 
 // Schedule the cleaning task
 setInterval(cleanQueue, CLEAN_INTERVAL);
+redisJobQueue.on('cleaned', function (jobs, type) {
+  console.log('Cleaned %s %s jobs', jobs.length, type);
+});
 
 // Process the jobs in the queue for adding, removing, or updating jobs in Redis
 redisJobQueue.process(async (job) => {
