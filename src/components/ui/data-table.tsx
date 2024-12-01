@@ -102,8 +102,6 @@ export function DataTable<TData, TValue>({
   const [firingType, setFiringType] = useState('');
   const [cost, setCost] = useState(0);
 
-  // console.log(account);
-
   const openDialogWithRowData = (rowData: KilnRequest) => {
     setRecordId(rowData.id);
     setFirstName(rowData.first_name);
@@ -231,7 +229,7 @@ export function DataTable<TData, TValue>({
         toast.error('Error updating record!', {
           description: error.message,
         });
-        console.error('Error updating row:', error);
+        console.error('Error updating row with ID:', recordId, error);
       }
     }
   };

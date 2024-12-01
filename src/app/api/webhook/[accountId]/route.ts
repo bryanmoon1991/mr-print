@@ -17,7 +17,7 @@ export async function POST(
   const httpRequest = webhookData?.ConnectionType;
 
   if (httpRequest === 'GetRequest') {
-    // console.log('in get request');
+    console.log('Printer GET request for: ', accountId);
     try {
       const queue = await QueueManager.getJobs(accountId);
       if (queue.length > 0) {
@@ -37,31 +37,29 @@ export async function POST(
         );
       }
     } catch (error) {
-      console.error('Error in get:', error);
+      console.error('Error in Printer GET:', error);
       return NextResponse.json({ success: false }, { status: 400 });
     }
   } else if (httpRequest === 'SetResponse') {
-    // console.log('in set response');
+    console.log('Printer SET response for: ', accountId);
     try {
       const queue = await QueueManager.getJobs(accountId);
       if (queue.length > 0) {
         const justPrinted = queue[0];
-        // console.log('justPrinted', justPrinted);
         const recordId = justPrinted['id'];
-        // console.log('recordID', recordId);
         await QueueManager.removeJob(
           accountId,
           justPrinted,
           recordId
         );
-        // console.log('redis after delete', deletion);
+        console.log('Processed print job:', justPrinted);
       }
       return NextResponse.json({
         success: true,
         message: 'Processed print job successfully',
       });
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in Printer SET:', error);
       return NextResponse.json(
         { success: false, message: 'Error processing print job' },
         { status: 500 }
@@ -96,15 +94,11 @@ async function convertImageToCustomFormat(
   width = height;
   height = temp;
 
-  // console.log(`Original dimensions: width=${width}, height=${height}`);
-
   // Step 1: Resize the image if needed
   if (width > widthScale) {
     const scaleFactor = widthScale / width;
     width = widthScale;
     height = Math.round(height * scaleFactor);
-
-    // console.log(`Resized dimensions: width=${width}, height=${height}`);
 
     image.resize(width, height, { fit: 'contain' });
   }

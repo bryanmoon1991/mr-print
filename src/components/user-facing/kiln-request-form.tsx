@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useId, useRef, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Label } from '../ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -53,10 +53,8 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const supabase = createClient();
   const { accountSlug } = useParams();
   const searchParams = useSearchParams();
-  const id = useId();
   const [accountId, setAccountId] = useState<string | null>(null);
 
-  console.log('min cost', metadata.minimum_cost, typeof metadata.minimum_cost);
   useEffect(() => {
     const id = searchParams.get('accountId');
     if (id) {
@@ -119,21 +117,19 @@ export default function KilnRequestForm({ metadata }: FormProps) {
     const fileName = `${accountId}_${firstName}_${lastName}-${
       file.name
     }-${uuidv4()}`; // Create a unique filename
-    // console.log(fileName);
     const { data, error } = (await supabase.storage
       .from('photos') // replace 'photos' with your bucket name
       .upload(fileName, file)) as { data: UploadResponse | null; error: Error };
 
     if (error) {
       setError(error.message);
-      console.error('Error uploading file:', error.message);
+      console.error('Error uploading PHOTO file:', error.message);
     } else {
-      // console.log('after upload', data);
       if (data && data.fullPath) {
         setPhotoUrl(process.env.NEXT_PUBLIC_PUBLIC_S3_URL! + data.fullPath);
         setUploaded(data.path);
       }
-      // console.log('File uploaded successfully:', data);
+      console.log('PHOTO file uploaded successfully:', data);
     }
     setUploading(false);
   };
@@ -146,14 +142,14 @@ export default function KilnRequestForm({ metadata }: FormProps) {
 
     if (error) {
       setError(error.message);
-      console.error('Error deleting file:', error.message);
+      console.error('Error deleting PHOTO file:', error.message);
     } else {
       if (data && data[0]['name'] == uploaded) {
         setUploaded('');
         setPhotoUrl('');
         setError('');
       }
-      // console.log('File deleted successfully:', data);
+      console.log('PHOTO file deleted successfully:', data);
     }
   };
 

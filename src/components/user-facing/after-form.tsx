@@ -81,9 +81,8 @@ export default function AfterForm() {
           .single();
 
         if (error) {
-          console.error('Error fetching record:', error);
+          console.error('Error fetching record with ID:', recordId, error);
         } else {
-          // console.log('fetched', data);
           setRecord(data);
         }
       };

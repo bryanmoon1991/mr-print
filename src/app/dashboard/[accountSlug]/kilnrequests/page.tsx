@@ -5,12 +5,11 @@ import { createClient } from '@/lib/supabase/client';
 import { DataTable } from '@/components/ui/data-table';
 import { columns } from './kilnRequests';
 import { toast } from 'sonner';
-import { addDays, format } from 'date-fns';
+import { addDays } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { useTeamAccount } from '../teamAccountProvider';
 import { parse, unparse } from 'papaparse';
 import type { KilnRequest, GroupedData } from './types';
-import type { Updater } from '@tanstack/react-table';
 
 export default function PrintJobsPage() {
   const supabaseClient = createClient();
@@ -75,8 +74,6 @@ export default function PrintJobsPage() {
   }, [pageIndex, pageSize, exportedFilter, filter, filterColumn]);
 
   const exportData = async () => {
-    // console.log('here');
-    // console.log('hit', date);
     if (date && date.from && date.to) {
       let from = new Date(date.from).toISOString();
       const toDate = new Date(date.to); // Parse the input
@@ -88,13 +85,10 @@ export default function PrintJobsPage() {
           59 * 1000 +
           999
       );
-      // console.log('after', toDate.toISOString());
       const to = toDate.toISOString();
       // date values are converted back to UTC and always have a time of 00:00:00
       // this means that a selected date is always right at the start of the date
       // if a user wishes to grab data up to a specific date, they need to add a day to the selected date
-      // console.log('from', from);
-      // console.log('to', to);
       let query = supabaseClient
         .from('kiln_requests')
         .select(
@@ -130,6 +124,7 @@ export default function PrintJobsPage() {
       let unparsed = unparse(transformedData);
       generateFile(unparsed);
       await markAsExported();
+      // console.log('Processed export for: ', teamAccount.slug, teamAccount.account_id);
     } else {
       toast.error('Please select a valid range');
     }
@@ -168,7 +163,6 @@ export default function PrintJobsPage() {
           59 * 1000 +
           999
       );
-      // console.log('after', toDate.toISOString());
       const to = toDate.toISOString();
       const updateQuery = supabaseClient
         .from('kiln_requests')

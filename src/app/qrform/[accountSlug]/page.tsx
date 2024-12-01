@@ -18,7 +18,7 @@ export default async function QrFormPage({
   );
 
   if (error) {
-    console.error('Error:', error);
+    console.error('Error with get_account_metadata_by_slug:', accountSlug, error);
   } 
 
   const billingStatus = await supabaseClient.rpc('get_subscription_status', {

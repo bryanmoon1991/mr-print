@@ -78,7 +78,6 @@ export default function EditTeamMetadata({ account }: Props) {
   );
   const [uploading, setUploading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  // console.log('og data', account.metadata);
 
   const handleUpload = async (file: File) => {
     // if a user uploads a photo and does not click save, the following data does not get written to metadata
@@ -88,17 +87,16 @@ export default function EditTeamMetadata({ account }: Props) {
 
     setUploading(true);
     setError('');
+
     const fileName = `${account.account_id}_${uuidv4()}_${file.name}`; // Create a unique filename
-    // console.log(fileName);
     const { data, error } = (await supabase.storage
-      .from('logos') // replace 'photos' with your bucket name
+      .from('logos') 
       .upload(fileName, file)) as { data: UploadResponse | null; error: Error };
 
     if (error) {
       setError(error.message);
-      console.error('Error uploading file:', error.message);
+      console.error('Error uploading LOGO file:', error.message);
     } else {
-      // console.log('after upload', data);
       //   {
       //     "path": "0681ac17-aedd-458a-a989-b8c3366d2ead-yaro.png",
       //     "id": "4a3ed275-153d-4592-9ac5-7fc4f0eda8e0",
@@ -108,7 +106,7 @@ export default function EditTeamMetadata({ account }: Props) {
         setPhotoUrl(process.env.NEXT_PUBLIC_PUBLIC_S3_URL! + data.fullPath);
         setUploaded(data.path);
       }
-      // console.log('File uploaded successfully:', data);
+      console.log('File uploaded successfully:', data);
     }
     setUploading(false);
   };
@@ -121,14 +119,14 @@ export default function EditTeamMetadata({ account }: Props) {
 
     if (error) {
       setError(error.message);
-      console.error('Error deleting file:', error.message);
+      console.error('Error deleting LOGO file:', error.message);
     } else {
       if (data && data[0]['name'] == uploaded) {
         setUploaded('');
         setPhotoUrl('');
         setError('');
       }
-      // console.log('File deleted successfully:', data);
+      console.log('LOGO file deleted successfully:', data);
     }
   };
 
@@ -359,7 +357,6 @@ export default function EditTeamMetadata({ account }: Props) {
   };
 
   const handleOptInChange = (key: keyof Metadata, value: boolean) => {
-    // console.log(value)
     setOptIn(value);
     setFormData((prevData) => ({
       ...prevData,
