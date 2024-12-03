@@ -3,7 +3,7 @@ export type KilnRequest = {
   account_id: string;
   first_name: string;
   last_name: string;
-  email: string | null;
+  email: string;
   opt_in: boolean | null;
   length: number;
   width: number;
