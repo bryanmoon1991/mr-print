@@ -42,7 +42,6 @@ export default function PrintJobsPage() {
       };
     }
   }, []);
-  console.log('account', teamAccount)
 
   // Fetch data with pagination and filtering
   const fetchData = async () => {
@@ -54,8 +53,8 @@ export default function PrintJobsPage() {
       .select('*', { count: 'exact' })
       .range(from, to)
       .order('created_at', { ascending: true })
-      .eq('exported', exportedFilter) // Apply the filter based on exported state
-      .eq('account_id', teamAccount.account_id);
+      .eq('account_id', teamAccount.account_id)
+      .eq('exported', exportedFilter); // Apply the filter based on exported state
 
     if (filter && filterColumn) {
       query = query.ilike(filterColumn, `%${filter}%`);
@@ -193,7 +192,7 @@ export default function PrintJobsPage() {
     // Group data by first and last name
     const groupedDataMap = parsedData.reduce<GroupedData>((acc, row) => {
       const fullName = `${row.first_name} ${row.last_name}`.trim();
-      const eMail = row.email
+      const eMail = row.email;
 
       if (!acc[eMail]) {
         acc[eMail] = {
