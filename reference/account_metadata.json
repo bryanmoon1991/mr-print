@@ -1,0 +1,9 @@
+{
+  "logo": { "filename": "", "logo_url": "" },
+  "opt_in": { "required": true },
+  "firing_types": ["bisque", "glaze"],
+  "minimum_cost": 1,
+  "member_cost": 0.05,
+  "non_member_cost": 0.08,
+  "terms_and_conditions": "The price will be calculated with the dimensions rounded up to the nearest 0.5in value.  Any dimension smaller than 2in will be rounded up to 2in for our final price calculation.  The minimum charge per slip is a $1.00. Mark the checkbox to agree to these terms and continue filling out the form!"
+}
