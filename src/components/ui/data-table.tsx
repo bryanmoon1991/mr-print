@@ -91,6 +91,7 @@ export function DataTable<TData, TValue>({
   const [recordId, setRecordId] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
   const [length, setLength] = useState<number | ''>(0);
   const [width, setWidth] = useState<number | ''>(0);
   const [height, setHeight] = useState<number | ''>(0);
@@ -106,6 +107,7 @@ export function DataTable<TData, TValue>({
     setRecordId(rowData.id);
     setFirstName(rowData.first_name);
     setLastName(rowData.last_name);
+    setLastName(rowData.email);
     setLength(rowData.length);
     setWidth(rowData.width);
     setHeight(rowData.height);
@@ -593,6 +595,19 @@ export function DataTable<TData, TValue>({
                   name='last_name'
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
+                  className='col-span-3'
+                />
+              </div>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='email' className='text-right'>
+                  Email
+                </Label>
+                <Input
+                  type='email'
+                  id='email'
+                  name='email'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className='col-span-3'
                 />
               </div>

@@ -64,6 +64,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
 
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const [optIn, setOptIn] = useState<boolean>(false);
   const [length, setLength] = useState<number | ''>(0);
   const [width, setWidth] = useState<number | ''>(0);
@@ -208,6 +209,16 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               name='last_name'
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              required
+            />
+
+            <Label htmlFor='email'>Email</Label>
+            <Input
+              type='email'
+              id='email'
+              name='email'
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
 

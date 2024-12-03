@@ -31,14 +31,16 @@ export default function PrintJobsPage() {
   });
 
   useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-    };
-    window.addEventListener('resize', handleResize);
+    if (window) {
+      const handleResize = () => {
+        setScreenWidth(window.innerWidth);
+      };
+      window.addEventListener('resize', handleResize);
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
   }, []);
 
   // Fetch data with pagination and filtering
@@ -188,11 +190,12 @@ export default function PrintJobsPage() {
     // Group data by first and last name
     const groupedDataMap = parsedData.reduce<GroupedData>((acc, row) => {
       const fullName = `${row.first_name} ${row.last_name}`.trim();
+      const eMail = row.email
 
-      if (!acc[fullName]) {
-        acc[fullName] = {
+      if (!acc[eMail]) {
+        acc[eMail] = {
           full_name: fullName,
-          email: row.email,
+          email: eMail,
           cost: 0,
           total_quantity: 0,
           date_range: { earliest: null, latest: null },
@@ -201,25 +204,25 @@ export default function PrintJobsPage() {
 
       // Sum up the costs
       const cost = parseFloat(row.cost.replace('$', '')) || 0;
-      acc[fullName].cost += cost;
+      acc[eMail].cost += cost;
 
       // Sum up the quantity
       const quantity = parseInt(row.quantity.toString(), 10) || 0;
-      acc[fullName].total_quantity += quantity;
+      acc[eMail].total_quantity += quantity;
 
       // Update date range
       const createdAt = new Date(row.created_at);
       if (
-        !acc[fullName].date_range.earliest ||
-        createdAt < new Date(acc[fullName].date_range.earliest ?? createdAt)
+        !acc[eMail].date_range.earliest ||
+        createdAt < new Date(acc[eMail].date_range.earliest ?? createdAt)
       ) {
-        acc[fullName].date_range.earliest = createdAt;
+        acc[eMail].date_range.earliest = createdAt;
       }
       if (
-        !acc[fullName].date_range.latest ||
-        createdAt > new Date(acc[fullName].date_range.latest ?? createdAt)
+        !acc[eMail].date_range.latest ||
+        createdAt > new Date(acc[eMail].date_range.latest ?? createdAt)
       ) {
-        acc[fullName].date_range.latest = createdAt;
+        acc[eMail].date_range.latest = createdAt;
       }
 
       return acc;

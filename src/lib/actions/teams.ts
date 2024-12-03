@@ -138,6 +138,7 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   const accountId = formData.get('accountId') as string;
   const firstName = formData.get('first_name') as string;
   const lastName = formData.get('last_name') as string;
+  const email = formData.get('email') as string;
   const optIn = formData.get('opt_in') as string;
   const length = formData.get('length') as string;
   const width = formData.get('width') as string;
@@ -160,6 +161,7 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
         account_id: accountId,
         first_name: firstName,
         last_name: lastName,
+        email,
         opt_in: optIn,
         length,
         width,
@@ -201,6 +203,7 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
   const id = formData.get('record_id') as string;
   const firstName = formData.get('first_name') as string;
   const lastName = formData.get('last_name') as string;
+  const email = formData.get('email') as string;
   const length = formData.get('length') as string;
   const width = formData.get('width') as string;
   const height = formData.get('height') as string;
@@ -218,6 +221,7 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
   .update({ 
     first_name: firstName,
     last_name: lastName,
+    email,
     length,
     width,
     height,
