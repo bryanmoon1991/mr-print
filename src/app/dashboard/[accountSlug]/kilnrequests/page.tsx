@@ -42,6 +42,7 @@ export default function PrintJobsPage() {
       };
     }
   }, []);
+  console.log('account', teamAccount)
 
   // Fetch data with pagination and filtering
   const fetchData = async () => {
@@ -53,7 +54,8 @@ export default function PrintJobsPage() {
       .select('*', { count: 'exact' })
       .range(from, to)
       .order('created_at', { ascending: true })
-      .eq('exported', exportedFilter); // Apply the filter based on exported state
+      .eq('exported', exportedFilter) // Apply the filter based on exported state
+      .eq('account_id', teamAccount.account_id);
 
     if (filter && filterColumn) {
       query = query.ilike(filterColumn, `%${filter}%`);
@@ -97,7 +99,8 @@ export default function PrintJobsPage() {
           'created_at, first_name, last_name, email, length, width, height, rounded_length, rounded_width, rounded_height, quantity, cost, firing_type, photo_url, non_member, printed, exported'
         )
         .gte('created_at', from)
-        .lte('created_at', to);
+        .lte('created_at', to)
+        .eq('account_id', teamAccount.account_id);
 
       if (filterExported) {
         query = query.eq('exported', !filterExported);

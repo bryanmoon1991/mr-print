@@ -2,8 +2,9 @@
 'use client'; // Mark as client component
 
 import { createContext, useContext } from 'react';
+import type { Account } from '../../../../types/data-table';
 
-const TeamAccountContext = createContext(null);
+const TeamAccountContext = createContext<Account | null>(null);
 
 export const useTeamAccount = () => {
   const context = useContext(TeamAccountContext);
