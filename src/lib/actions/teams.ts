@@ -143,9 +143,9 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   const length = formData.get('length') as string;
   const width = formData.get('width') as string;
   const height = formData.get('height') as string;
-  const roundedLength = formData.get('roundedLength') as string;
-  const roundedWidth = formData.get('roundedWidth') as string;
-  const roundedHeight = formData.get('roundedHeight') as string;
+  const rounded_length = formData.get('rounded_length') as string;
+  const rounded_width = formData.get('rounded_width') as string;
+  const rounded_height = formData.get('rounded_height') as string;
   const quantity = formData.get('quantity') as string;
   const cost = formData.get('cost') as string;
   const firingType = formData.get('firing_type') as string;
@@ -166,9 +166,9 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
         length,
         width,
         height,
-        rounded_length: roundedLength,
-        rounded_width: roundedWidth,
-        rounded_height: roundedHeight,
+        rounded_length,
+        rounded_width,
+        rounded_height,
         quantity,
         cost,
         firing_type: firingType,
@@ -207,9 +207,9 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
   const length = formData.get('length') as string;
   const width = formData.get('width') as string;
   const height = formData.get('height') as string;
-  const roundedLength = formData.get('roundedLength') as string;
-  const roundedWidth = formData.get('roundedWidth') as string;
-  const roundedHeight = formData.get('roundedHeight') as string;
+  const rounded_length = formData.get('rounded_length') as string;
+  const rounded_width = formData.get('rounded_width') as string;
+  const rounded_height = formData.get('rounded_height') as string;
   const quantity = formData.get('quantity') as string;
   const cost = formData.get('cost') as string;
   const firingType = formData.get('firing_type') as string;
@@ -225,9 +225,9 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
     length,
     width,
     height,
-    rounded_length: roundedLength,
-    rounded_width: roundedWidth,
-    rounded_height: roundedHeight,
+    rounded_length,
+    rounded_width,
+    rounded_height,
     quantity,
     cost,
     firing_type: firingType,

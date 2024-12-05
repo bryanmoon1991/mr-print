@@ -1,16 +1,24 @@
-import NextLogo from './next-logo';
-import SupabaseLogo from './supabase-logo';
-import BasejumpLogo from './mr-print-logo';
+import { RainbowButton } from "../ui/rainbow-button";
+import { LucideArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function Header() {
   return (
-    <div className='flex flex-col gap-6 items-center'>
-      <BasejumpLogo />
-      <h1 className='sr-only'>Mr. Print Kiln Request Management System</h1>
-      <p className='text-xl !leading-tight max-w-xl text-center'>
-        the easiest way for artists studios to manage kiln requests{' '}
+    <div className='flex flex-col gap-4 items-center'>
+      <h1 className='sr-only'></h1>
+      <h1 className='text-6xl font-semibold !leading-tight max-w-xl text-center'>
+        Automate your Kiln Firing Workflow{' '}
+      </h1>
+      <p className='text-2xl font-light text-center'>
+        Mr. Print enables wireless ticket printing, cloud based record keeping,
+        and revenue tracking for your studio kilns. Streamline your workflow so
+        you can save time and grow your business.
       </p>
-      <div className='w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent my-8' />
+
+      <Link href='/dashboard'>
+      <RainbowButton>Get Started! <LucideArrowRight/></RainbowButton>
+      </Link>
+      <div className='w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent my-4' />
     </div>
   );
 }

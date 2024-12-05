@@ -412,9 +412,9 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                 </div>
               )}
             </div>
-            <input type='hidden' name='roundedLength' value={roundedLength} />
-            <input type='hidden' name='roundedWidth' value={roundedWidth} />
-            <input type='hidden' name='roundedHeight' value={roundedHeight} />
+            <input type='hidden' name='rounded_length' value={roundedLength} />
+            <input type='hidden' name='rounded_width' value={roundedWidth} />
+            <input type='hidden' name='rounded_height' value={roundedHeight} />
             {roundedLength &&
               roundedWidth &&
               roundedHeight &&

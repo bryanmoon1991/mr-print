@@ -15,7 +15,9 @@ export default function PrintJobsPage() {
   const supabaseClient = createClient();
   const teamAccount = useTeamAccount();
 
-  const [screenWidth, setScreenWidth] = useState<number>(window.innerWidth);
+  const [screenWidth, setScreenWidth] = useState<number>(
+    window?.innerWidth || 0
+  );
   const [pageIndex, setPageIndex] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(20);
   const [data, setData] = useState<KilnRequest[]>([]);
@@ -31,7 +33,7 @@ export default function PrintJobsPage() {
   });
 
   useEffect(() => {
-    if (window) {
+    if (typeof window != 'undefined') {
       const handleResize = () => {
         setScreenWidth(window.innerWidth);
       };
