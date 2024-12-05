@@ -3,14 +3,6 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
 import MrPrintLogo from '@/components/getting-started/mr-print-logo';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 
 export default async function Index() {
   return (
@@ -21,7 +13,9 @@ export default async function Index() {
             <MrPrintLogo />
           </Link>
 
-          <Link href='/dashboard'>Dashboard</Link>
+          <Link href='/dashboard'>
+            <Button>Dashboard</Button>
+          </Link>
         </div>
       </nav>
 
