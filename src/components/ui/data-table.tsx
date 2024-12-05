@@ -107,7 +107,7 @@ export function DataTable<TData, TValue>({
     setRecordId(rowData.id);
     setFirstName(rowData.first_name);
     setLastName(rowData.last_name);
-    setLastName(rowData.email);
+    setEmail(rowData.email);
     setLength(rowData.length);
     setWidth(rowData.width);
     setHeight(rowData.height);
@@ -715,9 +715,9 @@ export function DataTable<TData, TValue>({
                   className='col-span-3'
                 />
               </div>
-              <input type='hidden' name='roundedLength' value={roundedLength} />
-              <input type='hidden' name='roundedWidth' value={roundedWidth} />
-              <input type='hidden' name='roundedHeight' value={roundedHeight} />
+              <input type='hidden' name='rounded_length' value={roundedLength} />
+              <input type='hidden' name='rounded_width' value={roundedWidth} />
+              <input type='hidden' name='rounded_height' value={roundedHeight} />
               {roundedLength &&
                 roundedWidth &&
                 roundedHeight &&
