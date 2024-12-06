@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import PasswordInput from './passwordInput';
 
 export default function Login({
   searchParams,
@@ -25,7 +26,7 @@ export default function Login({
 
     if (error) {
       return redirect(
-        `/login?message=Could not authenticate user&returnUrl=${searchParams.returnUrl}`
+        `/login?message=Could not authenticate user: ${error.message}&returnUrl=${searchParams.returnUrl}`
       );
     }
 
@@ -70,7 +71,7 @@ export default function Login({
 
     if (error) {
       return redirect(
-        `/login?message=Could not authenticate user&returnUrl=${searchParams.returnUrl}`
+        `/login?message=Could not authenticate user: ${error.message}&returnUrl=${searchParams.returnUrl}`
       );
     }
 
@@ -110,12 +111,7 @@ export default function Login({
         <Label className='text-md' htmlFor='email'>
           Password
         </Label>
-        <Input
-          type='password'
-          name='password'
-          placeholder='••••••••'
-          required
-        />
+        <PasswordInput />
         <div className='flex flex-col gap-2'>
           <SubmitButton
             className='w-full'
