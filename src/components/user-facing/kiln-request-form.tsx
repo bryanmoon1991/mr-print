@@ -83,14 +83,26 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploaded, setUploaded] = useState<string>('');
 
+  const [unitCost, setUnitCost] = useState<number>(0);
+  const [baseCost, setBaseCost] = useState<number>(0);
+  const minCost = Number(metadata.minimum_cost);
+
   useEffect(() => {
     if (roundedLength && roundedWidth && roundedHeight) {
-      const baseCost = roundedLength * roundedWidth * roundedHeight;
       const unitCost = nonMember
-        ? metadata.non_member_cost
-        : metadata.member_cost;
-      const calcCost = parseFloat((baseCost * unitCost * quantity).toFixed(2));
+        ? Number(metadata.non_member_cost)
+        : Number(metadata.member_cost);
+      setUnitCost(unitCost);
 
+      const baseCost = roundedLength * roundedWidth * roundedHeight * unitCost;
+      setBaseCost(parseFloat(baseCost.toFixed(2)));
+
+      let calcCost;
+      if (baseCost < minCost) {
+        calcCost = parseFloat((minCost * quantity).toFixed(2));
+      } else {
+        calcCost = parseFloat((baseCost * quantity).toFixed(2));
+      }
       setCost(calcCost);
     }
   }, [
@@ -155,7 +167,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   };
 
   return (
-    <Card>
+    <Card className='self-center lg:max-w-[80%] xl:max-w-[50%] xxl:max-w-[40%]'>
       <CardHeader>
         <CardTitle>Fire a Piece!</CardTitle>
         <CardDescription>Kiln Request Form</CardDescription>
@@ -415,36 +427,51 @@ export default function KilnRequestForm({ metadata }: FormProps) {
             <input type='hidden' name='rounded_length' value={roundedLength} />
             <input type='hidden' name='rounded_width' value={roundedWidth} />
             <input type='hidden' name='rounded_height' value={roundedHeight} />
-            {roundedLength &&
-              roundedWidth &&
-              roundedHeight &&
-              quantity &&
-              cost && (
-                <div className='w-full text-xs text-right'>
-                  <span className=''>
-                    Rounded Length:<strong>{roundedLength}</strong> x Rounded
-                    Width:
-                    <strong>{roundedWidth}</strong> x Rounded Height:
-                    <strong>{roundedHeight}</strong> <br />x{' '}
-                    {nonMember ? 'Non-Member Cost:' : 'Member Cost:'}
-                    <strong>
-                      {nonMember
-                        ? metadata.non_member_cost
-                        : metadata.member_cost}
-                    </strong>{' '}
-                    x Quantity:<strong>{quantity}</strong> ={' '}
-                    <strong>${cost}</strong>
-                  </span>
-                </div>
-              )}
+            {cost != 0 && (
+              <div className='w-full text-xs text-right'>
+                <span className=''>
+                  Rounded Length: <strong>{roundedLength}</strong> x Rounded
+                  Width: <strong>{roundedWidth}</strong> x Rounded Height:{' '}
+                  <strong>{roundedHeight}</strong> x{' '}
+                  {nonMember ? 'Non-Member Cost: ' : 'Member Cost: '}
+                  <strong>
+                    $
+                    {nonMember
+                      ? metadata.non_member_cost
+                      : metadata.member_cost}
+                  </strong>{' '}
+                  = <strong>${baseCost}</strong>
+                  <br />
+                  {baseCost < minCost &&
+                    'Base cost is less than minimum cost, so minimum cost will be applied.'}
+                  {baseCost < minCost ? (
+                    <>
+                      <br />
+                      <span>
+                        Minimum cost: <strong>${minCost}</strong> x Quantity:{' '}
+                        <strong>{quantity}</strong> = <strong>${cost}</strong>
+                      </span>
+                    </>
+                  ) : (
+                    <span>
+                      x Quantity: <strong>{quantity}</strong> ={' '}
+                      <strong>${cost}</strong>
+                    </span>
+                  )}
+                  {/* {baseCost < minCost && `Minimum cost: $${minCost} `}x Quantity:
+                  <strong>{quantity}</strong> = <strong>${cost}</strong> */}
+                </span>
+              </div>
+            )}
             <Label htmlFor='cost'>Cost</Label>
             <Input
               type='number'
               id='cost'
               name='cost'
-              value={
-                cost < metadata.minimum_cost ? metadata.minimum_cost : cost
-              }
+              // value={
+              //   cost < metadata.minimum_cost ? metadata.minimum_cost : cost
+              // }
+              value={cost}
               readOnly
             />
           </div>
