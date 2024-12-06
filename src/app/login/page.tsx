@@ -111,12 +111,6 @@ export default function Login({
         <Label className='text-md' htmlFor='email'>
           Password
         </Label>
-        {/* <Input
-          type='password'
-          name='password'
-          placeholder='••••••••'
-          required
-        /> */}
         <PasswordInput />
         <div className='flex flex-col gap-2'>
           <SubmitButton
