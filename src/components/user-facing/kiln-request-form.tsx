@@ -458,8 +458,6 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                       <strong>${cost}</strong>
                     </span>
                   )}
-                  {/* {baseCost < minCost && `Minimum cost: $${minCost} `}x Quantity:
-                  <strong>{quantity}</strong> = <strong>${cost}</strong> */}
                 </span>
               </div>
             )}
