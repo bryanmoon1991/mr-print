@@ -102,6 +102,9 @@ export function DataTable<TData, TValue>({
   const [nonMember, setNonMember] = useState(false);
   const [firingType, setFiringType] = useState('');
   const [cost, setCost] = useState(0);
+  const [unitCost, setUnitCost] = useState<number>(0);
+  const [baseCost, setBaseCost] = useState<number>(0);
+  const minCost = Number(account.metadata.minimum_cost);
 
   const openDialogWithRowData = (rowData: KilnRequest) => {
     setRecordId(rowData.id);
@@ -196,11 +199,26 @@ export function DataTable<TData, TValue>({
 
   useEffect(() => {
     if (!account.metadata) return;
-    const baseCost = roundedLength * roundedWidth * roundedHeight;
+    // const baseCost = roundedLength * roundedWidth * roundedHeight;
+    // const unitCost = nonMember
+    //   ? account.metadata.non_member_cost
+    //   : account.metadata.member_cost;
+    // setCost(Number((baseCost * unitCost * quantity).toFixed(2)));
     const unitCost = nonMember
-      ? account.metadata.non_member_cost
-      : account.metadata.member_cost;
-    setCost(Number((baseCost * unitCost * quantity).toFixed(2)));
+      ? Number(account.metadata.non_member_cost)
+      : Number(account.metadata.member_cost);
+    setUnitCost(unitCost);
+
+    const baseCost = roundedLength * roundedWidth * roundedHeight * unitCost;
+    setBaseCost(parseFloat(baseCost.toFixed(2)));
+
+    let calcCost;
+    if (baseCost < minCost) {
+      calcCost = parseFloat((minCost * quantity).toFixed(2));
+    } else {
+      calcCost = parseFloat((baseCost * quantity).toFixed(2));
+    }
+    setCost(calcCost);
   }, [
     roundedLength,
     roundedWidth,
@@ -715,31 +733,51 @@ export function DataTable<TData, TValue>({
                   className='col-span-3'
                 />
               </div>
-              <input type='hidden' name='rounded_length' value={roundedLength} />
+              <input
+                type='hidden'
+                name='rounded_length'
+                value={roundedLength}
+              />
               <input type='hidden' name='rounded_width' value={roundedWidth} />
-              <input type='hidden' name='rounded_height' value={roundedHeight} />
-              {roundedLength &&
-                roundedWidth &&
-                roundedHeight &&
-                quantity &&
-                cost && (
-                  <div className='w-full text-xs text-right'>
-                    <span className=''>
-                      Rounded Length:<strong>{roundedLength}</strong> x Rounded
-                      Width:
-                      <strong>{roundedWidth}</strong> x Rounded Height:
-                      <strong>{roundedHeight}</strong> <br />x{' '}
-                      {nonMember ? 'Non-Member Cost:' : 'Member Cost:'}
-                      <strong>
-                        {nonMember
-                          ? account.metadata.non_member_cost
-                          : account.metadata.member_cost}
-                      </strong>{' '}
-                      x Quantity:<strong>{quantity}</strong> ={' '}
-                      <strong>${cost}</strong>
-                    </span>
-                  </div>
-                )}
+              <input
+                type='hidden'
+                name='rounded_height'
+                value={roundedHeight}
+              />
+              {cost != 0 && (
+                <div className='w-full text-xs text-right'>
+                  <span className=''>
+                    Rounded Length: <strong>{roundedLength}</strong> x Rounded
+                    Width: <strong>{roundedWidth}</strong> x Rounded Height:{' '}
+                    <strong>{roundedHeight}</strong> x{' '}
+                    {nonMember ? 'Non-Member Cost: ' : 'Member Cost: '}
+                    <strong>
+                      $
+                      {nonMember
+                        ? account.metadata.non_member_cost
+                        : account.metadata.member_cost}
+                    </strong>{' '}
+                    = <strong>${baseCost}</strong>
+                    <br />
+                    {baseCost < minCost &&
+                      'Base cost is less than minimum cost, so minimum cost will be applied.'}
+                    {baseCost < minCost ? (
+                      <>
+                        <br />
+                        <span>
+                          Minimum cost: <strong>${minCost}</strong> x Quantity:{' '}
+                          <strong>{quantity}</strong> = <strong>${cost}</strong>
+                        </span>
+                      </>
+                    ) : (
+                      <span>
+                        x Quantity: <strong>{quantity}</strong> ={' '}
+                        <strong>${cost}</strong>
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
               <div className='grid grid-cols-4 items-center gap-4'>
                 <Label htmlFor='cost' className='text-right'>
                   Cost
