@@ -476,7 +476,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
         </CardContent>
         <CardFooter className='text-right'>
           <SubmitButton formAction={addKilnRequest} pendingText='Submitting...'>
-            Add Item
+            Submit
           </SubmitButton>
         </CardFooter>
       </form>
