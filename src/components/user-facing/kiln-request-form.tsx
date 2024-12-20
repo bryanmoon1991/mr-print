@@ -128,8 +128,8 @@ export default function KilnRequestForm({ metadata }: FormProps) {
     setUploading(true);
     setError('');
     const fileName = `${accountId}_${firstName}_${lastName}-${
-      file.name
-    }-${uuidv4()}`; // Create a unique filename
+      uuidv4()
+    }-${file.name}`; // Create a unique filename
     const { data, error } = (await supabase.storage
       .from('photos') // replace 'photos' with your bucket name
       .upload(fileName, file)) as { data: UploadResponse | null; error: Error };
