@@ -220,6 +220,10 @@ async function generateEposXML(data: any) {
       <text reverse="false" ul="false" em="false" color="color_1"/>
       <text> ${data.email}&#10;</text>
       <text reverse="false" ul="true" em="false" color="color_1"/>
+      <text>Firing Type:</text>
+      <text reverse="false" ul="false" em="false" color="color_1"/>
+      <text> ${data.firing_type}&#10;</text>
+      <text reverse="false" ul="true" em="false" color="color_1"/>
       <text>Dimensions:</text>
       <text reverse="false" ul="false" em="false" color="color_1"/>
       <text> ${data.rounded_length}in x ${data.rounded_width}in x ${data.rounded_height}in &#10;</text>
