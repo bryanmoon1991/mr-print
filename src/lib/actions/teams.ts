@@ -125,8 +125,7 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
         const index = parseInt(key.replace('enforce_minimum-', ''), 10);
         if (!costsMap[index]) costsMap[index] = {};
         // If the checkbox is checked, the value can be `'on'` or `'true'`
-        costsMap[index].enforce_minimum =
-          data[key] === 'true' || data[key] === 'on';
+        costsMap[index].enforce_minimum = data[key] === 'on';
       }
     });
 
@@ -169,7 +168,8 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
 
   generic.member_cost = +parseFloat(member_cost).toFixed(2);
   generic.non_member_cost = +parseFloat(non_member_cost).toFixed(2);
-  generic.minimum_cost = +parseFloat(minimum_cost).toFixed(2) || generic.minimum_cost;
+  generic.minimum_cost =
+    +parseFloat(minimum_cost).toFixed(2) || generic.minimum_cost;
   generic.firing_types = getFiringTypes(objectFromForm);
   generic.costs = getCosts(objectFromForm);
   generic.opt_in.required = opt_in;

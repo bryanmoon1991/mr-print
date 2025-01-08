@@ -332,7 +332,7 @@ export default function EditTeamMetadata({ account }: Props) {
                     Enforce Minimum
                   </Label>
                   <Checkbox
-                    id={`enforce_minimum-${index}`}
+                    name={`enforce_minimum-${index}`}
                     checked={(cost as Cost).enforce_minimum}
                     onCheckedChange={(e) =>
                       handleCostChange(index, 'enforce_minimum', e)
@@ -348,7 +348,6 @@ export default function EditTeamMetadata({ account }: Props) {
             ))}
             <Button
               variant='default'
-              className='items-center max-w-xs'
               onClick={(e) => handleAddArrayItem(e, key as keyof Metadata)}
             >
               Add {labelText}
