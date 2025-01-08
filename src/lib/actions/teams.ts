@@ -2,7 +2,30 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '../supabase/server';
-import QueueManager from '@/lib/redis/qclient'
+import QueueManager from '@/lib/redis/qclient';
+
+type Cost = {
+  cost_name: string;
+  base_cost: number;
+  enforce_minimum: boolean;
+};
+
+interface TeamMetadata {
+  member_cost: number;
+  non_member_cost: number;
+  minimum_cost: number;
+  costs: Cost[]; // <-- Make sure we declare costs here
+  logo: {
+    logo_url: string;
+    filename: string;
+  };
+  firing_types: string[];
+  opt_in: {
+    required: boolean;
+  };
+  terms_and_conditions: string;
+  // ... other properties
+}
 
 export async function createTeam(prevState: any, formData: FormData) {
   'use server';
@@ -80,13 +103,54 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
     return firingTypes;
   }
 
-  const generic = {
+  function getCosts(data: Record<string, any>): Cost[] {
+    // This will store partial Cost objects keyed by index
+    const costsMap: Record<number, Partial<Cost>> = {};
+
+    Object.keys(data).forEach((key) => {
+      if (key.startsWith('cost_name-')) {
+        // Extract the index from the field name, e.g. 'cost_name-2' => 2
+        const index = parseInt(key.replace('cost_name-', ''), 10);
+        if (!costsMap[index]) costsMap[index] = {};
+        costsMap[index].cost_name = data[key];
+      }
+
+      if (key.startsWith('base_cost-')) {
+        const index = parseInt(key.replace('base_cost-', ''), 10);
+        if (!costsMap[index]) costsMap[index] = {};
+        costsMap[index].base_cost = parseFloat(data[key]) || 0;
+      }
+
+      if (key.startsWith('enforce_minimum-')) {
+        const index = parseInt(key.replace('enforce_minimum-', ''), 10);
+        if (!costsMap[index]) costsMap[index] = {};
+        // If the checkbox is checked, the value can be `'on'` or `'true'`
+        costsMap[index].enforce_minimum =
+          data[key] === 'true' || data[key] === 'on';
+      }
+    });
+
+    // Convert the partial objects in costsMap into a clean array of Cost objects
+    const costs: Cost[] = Object.keys(costsMap).map((idx) => {
+      const partial = costsMap[+idx];
+      return {
+        cost_name: partial.cost_name ?? '',
+        base_cost: partial.base_cost ?? 0,
+        enforce_minimum: partial.enforce_minimum ?? false,
+      };
+    });
+
+    return costs;
+  }
+
+  const generic: TeamMetadata = {
     member_cost: 0.0,
     non_member_cost: 0.0,
-    minimum_cost: 1.00,
+    minimum_cost: 0.0,
+    costs: [],
     logo: {
       logo_url: '',
-      filename: ''
+      filename: '',
     },
     firing_types: [''],
     opt_in: { required: false },
@@ -101,21 +165,24 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
   const logo_url = formData.get('logo_url') as string;
   const filename = formData.get('filename') as string;
 
+  const objectFromForm = Object.fromEntries(formData);
+
   generic.member_cost = +parseFloat(member_cost).toFixed(2);
   generic.non_member_cost = +parseFloat(non_member_cost).toFixed(2);
-  generic.minimum_cost = +parseFloat(minimum_cost).toFixed(2);
-  generic.firing_types = getFiringTypes(Object.fromEntries(formData));
-  generic.opt_in.required = opt_in
+  generic.minimum_cost = +parseFloat(minimum_cost).toFixed(2) || generic.minimum_cost;
+  generic.firing_types = getFiringTypes(objectFromForm);
+  generic.costs = getCosts(objectFromForm);
+  generic.opt_in.required = opt_in;
   generic.terms_and_conditions = terms_and_conditions;
   generic.logo = {
     logo_url,
-    filename
-  }
+    filename,
+  };
 
   const accountId = formData.get('accountId') as string;
   const supabase = createClient();
 
-  console.log('Submitting metadata update for: ', accountId, generic)
+  console.log('Submitting metadata update for: ', accountId, generic);
 
   const { data, error } = await supabase.rpc('update_account', {
     public_metadata: generic,
@@ -128,7 +195,6 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
       message: error.message,
     };
   }
-  // redirect(`/dashboard/${data.slug}/settings`);
 }
 
 export async function addKilnRequest(prevState: any, formData: FormData) {
@@ -153,7 +219,6 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   const photoUrl = formData.get('photo_url') as string;
   const supabase = createClient();
 
-
   const { data, error } = await supabase
     .from('kiln_requests')
     .insert([
@@ -176,24 +241,25 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
         photo_url: photoUrl,
       },
     ])
-    .select()
-
+    .select();
 
   if (error) {
     return {
       message: error.message,
     };
   } else {
-    const record = data[0]
+    const record = data[0];
     const result = await QueueManager.addJob(accountId, record);
 
     // Check if the job was successfully added to the Redis list
     if (result > 0) {
-      console.log('Successfully added to redis queue: ', accountId, record)
+      console.log('Successfully added to redis queue: ', accountId, record);
     } else {
-      console.error('Could not add to redis queue: ', accountId, record)
+      console.error('Could not add to redis queue: ', accountId, record);
     }
-    redirect(`/qrform/${slug}/after-form?accountId=${accountId}&recordId=${record.id}`);
+    redirect(
+      `/qrform/${slug}/after-form?accountId=${accountId}&recordId=${record.id}`
+    );
   }
 }
 
@@ -217,24 +283,24 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
   const supabase = createClient();
 
   const { data, error } = await supabase
-  .from('kiln_requests')
-  .update({ 
-    first_name: firstName,
-    last_name: lastName,
-    email,
-    length,
-    width,
-    height,
-    rounded_length,
-    rounded_width,
-    rounded_height,
-    quantity,
-    cost,
-    firing_type: firingType,
-    non_member: nonMember,
-  })
-  .eq('id', id)
-  .select()
+    .from('kiln_requests')
+    .update({
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      length,
+      width,
+      height,
+      rounded_length,
+      rounded_width,
+      rounded_height,
+      quantity,
+      cost,
+      firing_type: firingType,
+      non_member: nonMember,
+    })
+    .eq('id', id)
+    .select();
 
   if (error) {
     console.error('Error updating kiln request with ID: ', id, error);
@@ -242,8 +308,8 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
       message: error.message,
     };
   } else {
-    const record = data[0]
-    console.log('Successfully updated kiln request with ID: ', id, record)
-    return record
+    const record = data[0];
+    console.log('Successfully updated kiln request with ID: ', id, record);
+    return record;
   }
 }
