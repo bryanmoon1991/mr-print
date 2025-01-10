@@ -20,15 +20,8 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+
+import { Cost, Metadata } from '@/../types/data-table';
 
 import { Textarea } from '../ui/textarea';
 import { v4 as uuidv4 } from 'uuid';
@@ -36,32 +29,6 @@ import { v4 as uuidv4 } from 'uuid';
 type Props = {
   account: GetAccountResponse;
 };
-
-type ExtendedProps = Props & {
-  member_cost: number;
-  non_member_cost: number;
-  minimum_cost: number;
-  terms_and_conditions: string;
-  firing_types: string[];
-};
-
-export type Cost = {
-  cost_name: string;
-  base_cost: number;
-  enforce_minimum: boolean;
-};
-export interface Metadata {
-  logo: { logo_url: string; filename: string };
-  member_cost: number;
-  non_member_cost: number;
-  minimum_cost: number;
-  costs: Cost[];
-  firing_types: string[];
-  opt_in: {
-    required: boolean;
-  };
-  terms_and_conditions: string;
-}
 
 interface UploadResponse {
   id: string;

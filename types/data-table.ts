@@ -27,6 +27,24 @@ export interface DataTableProps<TData, TValue> {
   onPaginationChange?: (pagination: PaginationState) => void;
 }
 
+export type Cost = {
+  cost_name: string;
+  base_cost: number;
+  enforce_minimum: boolean;
+};
+export interface Metadata {
+  logo: { logo_url: string; filename: string };
+  member_cost: number;
+  non_member_cost: number;
+  minimum_cost: number;
+  costs: Cost[];
+  firing_types: string[];
+  opt_in: {
+    required: boolean;
+  };
+  terms_and_conditions: string;
+}
+
 export type Account = {
   account_id: string;
   account_role: string;
@@ -38,18 +56,5 @@ export type Account = {
   billing_status: string;
   created_at: string; // ISO 8601 format
   updated_at: string; // ISO 8601 format
-  metadata: {
-    logo: {
-      filename: string;
-      logo_url: string;
-    };
-    opt_in: {
-      required: boolean;
-    };
-    member_cost: number;
-    non_member_cost: number;
-    minimum_cost: number;
-    firing_types: string[];
-    terms_and_conditions: string;
-  };
+  metadata: Metadata;
 };
