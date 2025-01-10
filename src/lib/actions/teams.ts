@@ -215,7 +215,9 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   const quantity = formData.get('quantity') as string;
   const cost = formData.get('cost') as string;
   const firingType = formData.get('firing_type') as string;
-  const nonMember = formData.get('non_member') as string;
+  // const nonMember = formData.get('non_member') as string;
+  const pricingCategory = formData.get('pricing_category') as string;
+  const rateAmount = formData.get('rate_amount') as string;
   const photoUrl = formData.get('photo_url') as string;
   const supabase = createClient();
 
@@ -237,7 +239,9 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
         quantity,
         cost,
         firing_type: firingType,
-        non_member: nonMember,
+        // non_member: nonMember,
+        pricing_category: pricingCategory,
+        rate_amount: rateAmount,
         photo_url: photoUrl,
       },
     ])

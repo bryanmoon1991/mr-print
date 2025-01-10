@@ -392,9 +392,9 @@ export default function KilnRequestForm({ metadata }: FormProps) {
             </div>
 
             <div className='flex flex-col gap-y-2'>
-              <Label htmlFor='selected_cost'>Rate Type</Label>
+              <Label htmlFor='pricing_category'>Rate Type</Label>
               <RadioGroup
-                name='selected_cost'
+                name='pricing_category'
                 defaultValue={costs[0].cost_name}
                 onValueChange={handleCostChange}
               >
@@ -502,6 +502,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
             <input type='hidden' name='rounded_length' value={roundedLength} />
             <input type='hidden' name='rounded_width' value={roundedWidth} />
             <input type='hidden' name='rounded_height' value={roundedHeight} />
+            <input type='hidden' name='rate_amount' value={unitCost} />
 
             {cost != 0 && (
               <div className='w-full text-xs text-right'>
