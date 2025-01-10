@@ -29,6 +29,7 @@ import { Upload, Loader2, X, AlertCircle, InfoIcon } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { v4 as uuidv4 } from 'uuid';
 import { Metadata, Cost } from '@/../types/data-table';
+import handleEdgeFunctionError from '@/lib/supabase/handle-edge-error';
 
 // interface Metadata {
 //   opt_in: {
@@ -76,7 +77,8 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [roundedHeight, setRoundedHeight] = useState<number | ''>(0);
   const [quantity, setQuantity] = useState<number>(1);
   // const [nonMember, setNonMember] = useState<boolean>(false);
-  const [firingType, setFiringType] = useState<string>(
+  const [firingTypes, setFiringTypes] = useState<string[]>(metadata.firing_types);
+  const [selectedFiringType, setSelectedFiringType] = useState<string>(
     metadata.firing_types[0]
   );
   const [photoUrl, setPhotoUrl] = useState<string>('');
@@ -347,7 +349,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                 />
               </div>
             </div>
-            <div className='flex flex-col gap-y-2'>
+            {/* <div className='flex flex-col gap-y-2'>
               <Label htmlFor='firing_type'>Firing Type</Label>
               <Select
                 value={firingType}
@@ -365,11 +367,34 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                   ))}
                 </SelectContent>
               </Select>
+            </div> */}
+
+            <div className='flex flex-col gap-y-2'>
+              <Label htmlFor='firing_type'>Firing Type</Label>
+              <RadioGroup
+                name='firing_type'
+                defaultValue={firingTypes[0]}
+                onValueChange={setSelectedFiringType}
+              >
+                {firingTypes.map((type) => (
+                  <div
+                    key={type}
+                    className='flex items-center space-x-2'
+                  >
+                    <RadioGroupItem
+                      value={type}
+                      id={type}
+                    />
+                    <Label htmlFor={type}>{type}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
             </div>
 
             <div className='flex flex-col gap-y-2'>
-              <Label htmlFor='firing_type'>Rate Type</Label>
+              <Label htmlFor='selected_cost'>Rate Type</Label>
               <RadioGroup
+                name='selected_cost'
                 defaultValue={costs[0].cost_name}
                 onValueChange={handleCostChange}
               >
