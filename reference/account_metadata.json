@@ -1,9 +1,37 @@
 {
-  "logo": { "filename": "", "logo_url": "" },
-  "opt_in": { "required": true },
-  "firing_types": ["bisque", "glaze"],
+  "logo": {
+    "filename": "",
+    "logo_url": ""
+  },
+  "costs": [
+    {
+      "rate_amount": 0.04,
+      "enforce_minimum": true,
+      "pricing_category": "Member"
+    },
+    {
+      "rate_amount": 0.05,
+      "enforce_minimum": true,
+      "pricing_category": "Student"
+    },
+    {
+      "rate_amount": 0.08,
+      "enforce_minimum": true,
+      "pricing_category": "Outside Firing"
+    },
+    {
+      "rate_amount": 0,
+      "enforce_minimum": false,
+      "pricing_category": "Complimentary"
+    }
+  ],
+  "opt_in": {
+    "required": true
+  },
+  "firing_types": [
+    "bisque",
+    "glaze"
+  ],
   "minimum_cost": 1,
-  "member_cost": 0.05,
-  "non_member_cost": 0.08,
-  "terms_and_conditions": "The price will be calculated with the dimensions rounded up to the nearest 0.5in value.  Any dimension smaller than 2in will be rounded up to 2in for our final price calculation.  The minimum charge per slip is a $1.00. Mark the checkbox to agree to these terms and continue filling out the form!"
+  "terms_and_conditions": "The price will be calculated with the dimensions rounded to the nearest 0.5 value.  Any dimension smaller than 2in will be rounded to 2in when we review your forms for our final price calculation.  The minimum charge per slip is a $1.00. Mark the checkbox to agree to these terms and continue filling out the form!"
 }

@@ -5,13 +5,6 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Label } from '../ui/label';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
 import { SubmitButton } from '../ui/submit-button';
 import { addKilnRequest } from '@/lib/actions/teams';
 import { Checkbox } from '../ui/checkbox';
@@ -29,18 +22,6 @@ import { Upload, Loader2, X, AlertCircle, InfoIcon } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { v4 as uuidv4 } from 'uuid';
 import { Metadata, Cost } from '@/../types/data-table';
-import handleEdgeFunctionError from '@/lib/supabase/handle-edge-error';
-
-// interface Metadata {
-//   opt_in: {
-//     required: boolean;
-//   };
-//   member_cost: number;
-//   non_member_cost: number;
-//   minimum_cost: number;
-//   firing_types: string[];
-//   terms_and_conditions: string;
-// }
 
 interface FormProps {
   metadata: Metadata;
@@ -76,7 +57,6 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [roundedWidth, setRoundedWidth] = useState<number | ''>(0);
   const [roundedHeight, setRoundedHeight] = useState<number | ''>(0);
   const [quantity, setQuantity] = useState<number>(1);
-  // const [nonMember, setNonMember] = useState<boolean>(false);
   const [firingTypes, setFiringTypes] = useState<string[]>(metadata.firing_types);
   const [selectedFiringType, setSelectedFiringType] = useState<string>(
     metadata.firing_types[0]
@@ -94,10 +74,6 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [baseCost, setBaseCost] = useState<number>(0);
   const minCost = Number(metadata.minimum_cost);
 
-  // useEffect(() => {
-  //   console.log('here', selectedCost)
-  // }, [selectedCost])
-
   const handleCostChange = (selectedOption: string) => {
     let option = costs.find((cost) => cost.pricing_category === selectedOption);
     setSelectedCost(option);
@@ -106,9 +82,6 @@ export default function KilnRequestForm({ metadata }: FormProps) {
 
   useEffect(() => {
     if (roundedLength && roundedWidth && roundedHeight) {
-      // const unitCost = selectedCost ? selectedCost.rate_amount : 0;
-      // setUnitCost(unitCost);
-
       const baseCost = roundedLength * roundedWidth * roundedHeight * unitCost;
       setBaseCost(parseFloat(baseCost.toFixed(2)));
 
@@ -125,7 +98,6 @@ export default function KilnRequestForm({ metadata }: FormProps) {
     roundedWidth,
     roundedHeight,
     quantity,
-    // nonMember,
     selectedCost,
     metadata,
   ]);
@@ -133,10 +105,6 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const handleOptInChecked = (checked: boolean) => {
     setOptIn(checked);
   };
-
-  // const handleNonMemberChecked = (checked: boolean) => {
-  //   setNonMember(checked);
-  // };
 
   const handleUpload = async (file: File, inputRef: HTMLInputElement) => {
     if (!file) return;
@@ -190,7 +158,6 @@ export default function KilnRequestForm({ metadata }: FormProps) {
         <CardTitle>Fire a Piece!</CardTitle>
         <CardDescription>Kiln Request Form</CardDescription>
       </CardHeader>
-      {/* {message && <p>{message}</p>} */}
       <form className='animate-in flex-1 text-foreground'>
         <input type='hidden' name='slug' value={accountSlug} />
         <input type='hidden' name='accountId' value={accountId || ''} />

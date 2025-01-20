@@ -34,8 +34,6 @@ export type Cost = {
 };
 export interface Metadata {
   logo: { logo_url: string; filename: string };
-  member_cost: number;
-  non_member_cost: number;
   minimum_cost: number;
   costs: Cost[];
   firing_types: string[];

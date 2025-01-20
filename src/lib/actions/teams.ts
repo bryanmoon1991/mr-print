@@ -11,10 +11,10 @@ type Cost = {
 };
 
 interface TeamMetadata {
-  member_cost: number;
-  non_member_cost: number;
+  // member_cost: number;
+  // non_member_cost: number;
   minimum_cost: number;
-  costs: Cost[]; // <-- Make sure we declare costs here
+  costs: Cost[]; 
   logo: {
     logo_url: string;
     filename: string;
@@ -24,7 +24,6 @@ interface TeamMetadata {
     required: boolean;
   };
   terms_and_conditions: string;
-  // ... other properties
 }
 
 export async function createTeam(prevState: any, formData: FormData) {
@@ -143,8 +142,6 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
   }
 
   const generic: TeamMetadata = {
-    member_cost: 0.0,
-    non_member_cost: 0.0,
     minimum_cost: 0.0,
     costs: [],
     logo: {
@@ -156,8 +153,6 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
     terms_and_conditions: '',
   };
 
-  const member_cost = formData.get('member_cost') as string;
-  const non_member_cost = formData.get('non_member_cost') as string;
   const minimum_cost = formData.get('minimum_cost') as string;
   const opt_in = formData.get('opt_in') === 'on' ? true : false;
   const terms_and_conditions = formData.get('terms_and_conditions') as string;
@@ -166,8 +161,6 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
 
   const objectFromForm = Object.fromEntries(formData);
 
-  generic.member_cost = +parseFloat(member_cost).toFixed(2);
-  generic.non_member_cost = +parseFloat(non_member_cost).toFixed(2);
   generic.minimum_cost =
     +parseFloat(minimum_cost).toFixed(2) || generic.minimum_cost;
   generic.firing_types = getFiringTypes(objectFromForm);
@@ -201,11 +194,11 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   'use server';
 
   const slug = formData.get('slug') as string;
-  const accountId = formData.get('accountId') as string;
-  const firstName = formData.get('first_name') as string;
-  const lastName = formData.get('last_name') as string;
+  const account_id = formData.get('accountId') as string;
+  const first_name = formData.get('first_name') as string;
+  const last_name = formData.get('last_name') as string;
   const email = formData.get('email') as string;
-  const optIn = formData.get('opt_in') as string;
+  const opt_in = formData.get('opt_in') as string;
   const length = formData.get('length') as string;
   const width = formData.get('width') as string;
   const height = formData.get('height') as string;
@@ -214,22 +207,21 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
   const rounded_height = formData.get('rounded_height') as string;
   const quantity = formData.get('quantity') as string;
   const cost = formData.get('cost') as string;
-  const firingType = formData.get('firing_type') as string;
-  // const nonMember = formData.get('non_member') as string;
-  const pricingCategory = formData.get('pricing_category') as string;
-  const rateAmount = formData.get('rate_amount') as string;
-  const photoUrl = formData.get('photo_url') as string;
+  const firing_type = formData.get('firing_type') as string;
+  const pricing_category = formData.get('pricing_category') as string;
+  const rate_amount = formData.get('rate_amount') as string;
+  const photo_url = formData.get('photo_url') as string;
   const supabase = createClient();
 
   const { data, error } = await supabase
     .from('kiln_requests')
     .insert([
       {
-        account_id: accountId,
-        first_name: firstName,
-        last_name: lastName,
+        account_id,
+        first_name,
+        last_name,
         email,
-        opt_in: optIn,
+        opt_in,
         length,
         width,
         height,
@@ -238,11 +230,10 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
         rounded_height,
         quantity,
         cost,
-        firing_type: firingType,
-        // non_member: nonMember,
-        pricing_category: pricingCategory,
-        rate_amount: rateAmount,
-        photo_url: photoUrl,
+        firing_type,
+        pricing_category,
+        rate_amount,
+        photo_url,
       },
     ])
     .select();
@@ -253,16 +244,16 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
     };
   } else {
     const record = data[0];
-    const result = await QueueManager.addJob(accountId, record);
+    const result = await QueueManager.addJob(account_id, record);
 
     // Check if the job was successfully added to the Redis list
     if (result > 0) {
-      console.log('Successfully added to redis queue: ', accountId, record);
+      console.log('Successfully added to redis queue: ', account_id, record);
     } else {
-      console.error('Could not add to redis queue: ', accountId, record);
+      console.error('Could not add to redis queue: ', account_id, record);
     }
     redirect(
-      `/qrform/${slug}/after-form?accountId=${accountId}&recordId=${record.id}`
+      `/qrform/${slug}/after-form?accountId=${account_id}&recordId=${record.id}`
     );
   }
 }
@@ -283,7 +274,6 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
   const quantity = formData.get('quantity') as string;
   const cost = formData.get('cost') as string;
   const firing_type = formData.get('firing_type') as string;
-  // const nonMember = formData.get('non_member') as string;
   const pricing_category = formData.get('pricing_category') as string;
   const rate_amount = formData.get('rate_amount') as string;
   const supabase = createClient();
@@ -305,7 +295,6 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
       firing_type,
       pricing_category,
       rate_amount,
-      // non_member: nonMember,
     })
     .eq('id', id)
     .select();

@@ -101,7 +101,6 @@ export function DataTable<TData, TValue>({
   const [roundedWidth, setRoundedWidth] = useState(0);
   const [roundedHeight, setRoundedHeight] = useState(0);
   const [quantity, setQuantity] = useState(0);
-  const [nonMember, setNonMember] = useState(false);
   const [firingType, setFiringType] = useState('');
   const [cost, setCost] = useState(0);
   const [baseCost, setBaseCost] = useState<number>(0);
@@ -126,7 +125,6 @@ export function DataTable<TData, TValue>({
     setRoundedWidth(rowData.rounded_width);
     setRoundedHeight(rowData.rounded_height);
     setQuantity(rowData.quantity);
-    setNonMember(rowData.non_member || false);
     setFiringType(rowData.firing_type);
 
     // values saved in columns for cost
@@ -202,10 +200,6 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
-
-  const handleNonMemberChecked = (checked: boolean) => {
-    setNonMember(checked);
-  };
 
   const handleCostChange = (selectedOption: string) => {
     if (selectedOption === 'Custom') {
@@ -855,11 +849,6 @@ export function DataTable<TData, TValue>({
                   onChange={(e) => {
                     setRateAmount(Number(e.target.value));
                   }}
-                  // onFocus={(e) => {
-                  //   if (rateAmount === 0) {
-                  //     setRateAmount(0);
-                  //   }
-                  // }}
                   onBlur={(e) => {
                     if (e.target.value === '') {
                       setRateAmount(0); // Reset to 0 if the user leaves the field empty
@@ -869,18 +858,6 @@ export function DataTable<TData, TValue>({
                 />
               </div>
 
-              {/* <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='non_member' className='text-right'>
-                  Non Member?
-                </Label>
-                <Checkbox
-                  id='non_member'
-                  name='non_member'
-                  checked={nonMember}
-                  onCheckedChange={handleNonMemberChecked}
-                />
-              </div>
- */}
               <input
                 type='hidden'
                 name='rounded_length'

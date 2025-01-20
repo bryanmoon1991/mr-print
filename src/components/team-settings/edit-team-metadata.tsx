@@ -106,8 +106,6 @@ export default function EditTeamMetadata({ account }: Props) {
 
   const orderedKeys: (keyof Metadata)[] = [
     'logo',
-    'member_cost',
-    'non_member_cost',
     'costs',
     'minimum_cost',
     'firing_types',
@@ -226,8 +224,6 @@ export default function EditTeamMetadata({ account }: Props) {
           </div>
         );
       } else if (
-        key === 'member_cost' ||
-        key === 'non_member_cost' ||
         key === 'minimum_cost'
       ) {
         return (
@@ -256,15 +252,13 @@ export default function EditTeamMetadata({ account }: Props) {
             />
           </div>
         );
-        // } else if (Array.isArray(value)) {
       } else if (key === 'costs' && Array.isArray(value)) {
         return (
           <div key={key} className='flex flex-col gap-1'>
-            {/* <Label>{labelText}</Label> */}
             {value.map((cost, index) => (
               <div key={`${key}-${index}`} className='flex gap-1'>
                 <div className='grid w-full max-w-sm items-start gap-1.5'>
-                  <Label htmlFor={`pricing_category-${index}`}>Cost Name</Label>
+                  <Label htmlFor={`pricing_category-${index}`}>Pricing Category</Label>
                   <Input
                     defaultValue={(cost as Cost).pricing_category}
                     name={`pricing_category-${index}`}
@@ -274,9 +268,8 @@ export default function EditTeamMetadata({ account }: Props) {
                   />
                 </div>
 
-                {/* rate_amount input */}
                 <div className='grid w-full max-w-sm items-start gap-1.5'>
-                  <Label htmlFor={`rate_amount-${index}`}>Base Cost</Label>
+                  <Label htmlFor={`rate_amount-${index}`}>Rate Amount</Label>
                   <Input
                     type='number'
                     step='0.01'
@@ -288,8 +281,6 @@ export default function EditTeamMetadata({ account }: Props) {
                     }
                   />
                 </div>
-
-                {/* enforce_minimum checkbox */}
 
                 <div className='grid max-w-sm items-start gap-1.5'>
                   <Label

@@ -39,7 +39,8 @@ type Record = {
   quantity: number;
   cost: string;
   firing_type: string;
-  non_member: boolean | null;
+  pricing_category: string;
+  rate_amount: number;
   photo_url: string | null;
   printed: boolean;
   exported: boolean;
@@ -123,6 +124,10 @@ export default function AfterForm() {
                 <li>
                   <strong>Date:</strong>{' '}
                   {new Date(record.created_at).toLocaleString()}
+                </li>
+                <li>
+                  <strong>Pricing Category:</strong>{' '}
+                  {record.pricing_category}
                 </li>
                 <li>
                   <strong>Dimensions:</strong>{' '}
