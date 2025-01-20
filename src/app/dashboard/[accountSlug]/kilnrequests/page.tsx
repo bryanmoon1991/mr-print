@@ -97,7 +97,7 @@ export default function PrintJobsPage() {
       let query = supabaseClient
         .from('kiln_requests')
         .select(
-          'created_at, first_name, last_name, email, length, width, height, rounded_length, rounded_width, rounded_height, quantity, cost, firing_type, photo_url, non_member, printed, exported'
+          'created_at, first_name, last_name, email, length, width, height, rounded_length, rounded_width, rounded_height, quantity, cost, firing_type, photo_url, pricing_category, rate_amount, printed, exported'
         )
         .gte('created_at', from)
         .lte('created_at', to)

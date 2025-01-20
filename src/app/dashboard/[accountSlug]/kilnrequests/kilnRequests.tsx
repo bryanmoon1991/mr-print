@@ -40,8 +40,8 @@ export const columns: ColumnDef<KilnRequest, CustomTableMeta>[] = [
   //   header: 'Email',
   // },
   {
-    accessorKey: 'non_member',
-    header: 'Non Member',
+    accessorKey: 'pricing_category',
+    header: 'Pricing Category',
   },
   {
     header: 'Dimensions',
