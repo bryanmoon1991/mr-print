@@ -122,12 +122,16 @@ export default function AfterForm() {
                   {record.first_name + ' ' + record.last_name}
                 </li>
                 <li>
+                  <strong>Email:</strong>{' '}
+                  {record.email}
+                </li>
+                <li>
                   <strong>Date:</strong>{' '}
                   {new Date(record.created_at).toLocaleString()}
                 </li>
                 <li>
-                  <strong>Pricing Category:</strong>{' '}
-                  {record.pricing_category}
+                  <strong>Pricing:</strong>{' '}
+                  {record.pricing_category} @ ${record.rate_amount}/in
                 </li>
                 <li>
                   <strong>Dimensions:</strong>{' '}

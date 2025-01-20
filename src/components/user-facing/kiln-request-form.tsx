@@ -69,15 +69,17 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   const [costs, setCosts] = useState<Cost[]>(metadata.costs);
-  const [selectedCost, setSelectedCost] = useState<Cost | undefined>(undefined);
+  const [selectedCost, setSelectedCost] = useState<Cost>(metadata.costs[0]);
   const [unitCost, setUnitCost] = useState<number>(metadata.costs[0].rate_amount);
   const [baseCost, setBaseCost] = useState<number>(0);
   const minCost = Number(metadata.minimum_cost);
 
   const handleCostChange = (selectedOption: string) => {
     let option = costs.find((cost) => cost.pricing_category === selectedOption);
-    setSelectedCost(option);
-    setUnitCost(option?.rate_amount || 0);
+    if (option) {
+      setSelectedCost(option);
+      setUnitCost(option?.rate_amount || 0);
+    }
   };
 
   useEffect(() => {
@@ -362,7 +364,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               <Label htmlFor='pricing_category'>Rate Type</Label>
               <RadioGroup
                 name='pricing_category'
-                defaultValue={costs[0].pricing_category}
+                defaultValue={selectedCost.pricing_category}
                 onValueChange={handleCostChange}
               >
                 {costs.map((cost) => (

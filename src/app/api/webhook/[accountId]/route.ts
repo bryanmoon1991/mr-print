@@ -234,11 +234,11 @@ async function generateEposXML(data: any) {
       <text reverse="false" ul="true" em="false" color="color_1"/>
       <text>Pricing:</text>
       <text reverse="false" ul="false" em="false" color="color_1"/>
-      <text> ${data.pricing_category} : $${data.rate_amount}&#10;</text>
+      <text> ${data.pricing_category} @ $${data.rate_amount}/in&#10;</text>
       <text reverse="false" ul="true" em="false" color="color_1"/>
       <text>Cost:</text>
       <text reverse="false" ul="false" em="false" color="color_1"/>
-      <text> $${data.cost}&#10;</text>
+      <text> ${data.cost}&#10;</text>
       <text reverse="false" ul="true" em="false" color="color_1"/>
       ${
         data.photo_url
