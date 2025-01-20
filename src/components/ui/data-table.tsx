@@ -52,6 +52,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 import { checkForDuplicate, reprint } from '@/lib/actions/print-requests';
 import { updateKilnRequest } from '@/lib/actions/teams';
@@ -59,6 +60,7 @@ import { toast } from 'sonner';
 import { KilnRequest } from '@/app/dashboard/[accountSlug]/kilnrequests/types';
 import type { DataTableProps } from '../../../types/data-table';
 import type { Updater } from '@tanstack/react-table';
+import type { Cost } from '@/../types/data-table';
 
 export function DataTable<TData, TValue>({
   columns,
@@ -102,8 +104,12 @@ export function DataTable<TData, TValue>({
   const [nonMember, setNonMember] = useState(false);
   const [firingType, setFiringType] = useState('');
   const [cost, setCost] = useState(0);
-  const [unitCost, setUnitCost] = useState<number>(0);
   const [baseCost, setBaseCost] = useState<number>(0);
+
+  const [customCost, setCustomCost] = useState<Cost | 'Custom' | undefined>(undefined);
+  const [pricingCategory, setPricingCategory] = useState<string>('');
+  const [rateAmount, setRateAmount] = useState<number>(0);
+
   const minCost = Number(account.metadata.minimum_cost);
 
   const openDialogWithRowData = (rowData: KilnRequest) => {
@@ -120,6 +126,17 @@ export function DataTable<TData, TValue>({
     setQuantity(rowData.quantity);
     setNonMember(rowData.non_member || false);
     setFiringType(rowData.firing_type);
+
+    // values saved in columns for cost
+    setPricingCategory(rowData.pricing_category || '');
+    setRateAmount(rowData.rate_amount || 0);
+
+    // actual custom cost from account metadata
+    let option = account.metadata.costs.find(
+      (cost) => cost.cost_name === rowData.pricing_category
+    );
+    setCustomCost(option || 'Custom');
+
     setCost(Number(rowData.cost));
     setIsDialogOpen(true);
   };
@@ -188,6 +205,22 @@ export function DataTable<TData, TValue>({
     setNonMember(checked);
   };
 
+  const handleCostChange = (selectedOption: string) => {
+    if (selectedOption === 'Custom') {
+      setCustomCost(selectedOption);
+      setPricingCategory('');
+      setRateAmount(0);
+      return;
+    }
+
+    let option = account.metadata.costs.find(
+      (cost) => cost.cost_name === selectedOption
+    );
+    setCustomCost(option);
+    setPricingCategory(option?.cost_name || '');
+    setRateAmount(option?.base_cost || 0);
+  };
+
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
   };
@@ -199,21 +232,11 @@ export function DataTable<TData, TValue>({
 
   useEffect(() => {
     if (!account.metadata) return;
-    // const baseCost = roundedLength * roundedWidth * roundedHeight;
-    // const unitCost = nonMember
-    //   ? account.metadata.non_member_cost
-    //   : account.metadata.member_cost;
-    // setCost(Number((baseCost * unitCost * quantity).toFixed(2)));
-    const unitCost = nonMember
-      ? Number(account.metadata.non_member_cost)
-      : Number(account.metadata.member_cost);
-    setUnitCost(unitCost);
-
-    const baseCost = roundedLength * roundedWidth * roundedHeight * unitCost;
+    const baseCost = roundedLength * roundedWidth * roundedHeight * rateAmount;
     setBaseCost(parseFloat(baseCost.toFixed(2)));
 
     let calcCost;
-    if (baseCost < minCost) {
+    if (baseCost < minCost && customCost != 'Custom' && customCost?.enforce_minimum) {
       calcCost = parseFloat((minCost * quantity).toFixed(2));
     } else {
       calcCost = parseFloat((baseCost * quantity).toFixed(2));
@@ -224,7 +247,7 @@ export function DataTable<TData, TValue>({
     roundedWidth,
     roundedHeight,
     quantity,
-    nonMember,
+    rateAmount,
     account,
   ]);
 
@@ -639,7 +662,7 @@ export function DataTable<TData, TValue>({
                   name='length'
                   value={length}
                   onFocus={(e) => {
-                    if (height === 0) {
+                    if (length === 0) {
                       setLength('');
                     }
                   }}
@@ -677,7 +700,7 @@ export function DataTable<TData, TValue>({
                     );
                   }}
                   onFocus={(e) => {
-                    if (height === 0) {
+                    if (width === 0) {
                       setWidth('');
                     }
                   }}
@@ -733,6 +756,115 @@ export function DataTable<TData, TValue>({
                   className='col-span-3'
                 />
               </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='firing_type' className='text-right'>
+                  Firing Type
+                </Label>
+                <Select
+                  value={firingType}
+                  onValueChange={setFiringType}
+                  name='firing_type'
+                >
+                  <SelectTrigger className='col-span-3'>
+                    <SelectValue placeholder='Firing type' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {account.metadata.firing_types.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='pricing_category' className='text-right'>
+                  Pricing Categories
+                </Label>
+                <RadioGroup
+                  name='pricing_category'
+                  defaultValue={
+                    account.metadata.costs.find(
+                      (c) => c.cost_name == pricingCategory
+                    )?.cost_name || 'Custom'
+                  }
+                  onValueChange={handleCostChange}
+                >
+                  {account.metadata.costs.map((cost) => (
+                    <div
+                      key={cost.cost_name}
+                      className='flex items-center space-x-2'
+                    >
+                      <RadioGroupItem
+                        value={cost.cost_name}
+                        id={cost.cost_name}
+                      />
+                      <Label htmlFor={cost.cost_name}>{cost.cost_name}</Label>
+                    </div>
+                  ))}
+                  <div key='custom' className='flex items-center space-x-2'>
+                    <RadioGroupItem value='Custom' id='Custom' />
+                    <Label htmlFor='Custom'>Custom</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='pricing_category' className='text-right'>
+                  Pricing Category
+                </Label>
+                <Input
+                  type='text'
+                  id='pricing_category'
+                  name='pricing_category'
+                  value={pricingCategory}
+                  onChange={(e) => setPricingCategory(e.target.value)}
+                  className='col-span-3'
+                />
+              </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='rate_amount' className='text-right'>
+                  Rate Amount
+                </Label>
+                <Input
+                  type='number'
+                  id='rate_amount'
+                  name='rate_amount'
+                  value={rateAmount}
+                  step={0.01}
+                  min={0}
+                  onChange={(e) => {
+                    setRateAmount(Number(e.target.value));
+                  }}
+                  // onFocus={(e) => {
+                  //   if (rateAmount === 0) {
+                  //     setRateAmount(0);
+                  //   }
+                  // }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setRateAmount(0); // Reset to 0 if the user leaves the field empty
+                    }
+                  }}
+                  className='col-span-3'
+                />
+              </div>
+
+              {/* <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='non_member' className='text-right'>
+                  Non Member?
+                </Label>
+                <Checkbox
+                  id='non_member'
+                  name='non_member'
+                  checked={nonMember}
+                  onCheckedChange={handleNonMemberChecked}
+                />
+              </div>
+ */}
               <input
                 type='hidden'
                 name='rounded_length'
@@ -750,18 +882,14 @@ export function DataTable<TData, TValue>({
                     Rounded Length: <strong>{roundedLength}</strong> x Rounded
                     Width: <strong>{roundedWidth}</strong> x Rounded Height:{' '}
                     <strong>{roundedHeight}</strong> x{' '}
-                    {nonMember ? 'Non-Member Cost: ' : 'Member Cost: '}
-                    <strong>
-                      $
-                      {nonMember
-                        ? account.metadata.non_member_cost
-                        : account.metadata.member_cost}
-                    </strong>{' '}
-                    = <strong>${baseCost}</strong>
+                    {`${customCost != 'Custom' ? customCost?.cost_name : customCost } Cost: `}
+                    <strong>${customCost != 'Custom' ? customCost?.base_cost : rateAmount }</strong> ={' '}
+                    <strong>${baseCost}</strong>
                     <br />
-                    {baseCost < minCost &&
+                    {baseCost < minCost && customCost != 'Custom' &&
+                      customCost?.enforce_minimum &&
                       'Base cost is less than minimum cost, so minimum cost will be applied.'}
-                    {baseCost < minCost ? (
+                    {baseCost < minCost && customCost != 'Custom' && customCost?.enforce_minimum ? (
                       <>
                         <br />
                         <span>
@@ -787,44 +915,12 @@ export function DataTable<TData, TValue>({
                   id='cost'
                   name='cost'
                   value={
-                    cost < account.metadata.minimum_cost
+                    cost < account.metadata.minimum_cost && customCost != 'Custom' && customCost?.enforce_minimum
                       ? account.metadata.minimum_cost
                       : cost
                   }
                   className='col-span-3'
                   readOnly
-                />
-              </div>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='firing_type' className='text-right'>
-                  Firing Type
-                </Label>
-                <Select
-                  value={firingType}
-                  onValueChange={setFiringType}
-                  name='firing_type'
-                >
-                  <SelectTrigger className='col-span-3'>
-                    <SelectValue placeholder='Firing type' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {account.metadata.firing_types.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='non_member' className='text-right'>
-                  Non Member?
-                </Label>
-                <Checkbox
-                  id='non_member'
-                  name='non_member'
-                  checked={nonMember}
-                  onCheckedChange={handleNonMemberChecked}
                 />
               </div>
               <DialogFooter>

@@ -16,7 +16,7 @@ export default function PrintJobsPage() {
   const teamAccount = useTeamAccount();
 
   const [screenWidth, setScreenWidth] = useState<number>(
-    window?.innerWidth || 0
+     window?.innerWidth || 0
   );
   const [pageIndex, setPageIndex] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(20);
