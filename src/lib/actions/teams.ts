@@ -5,8 +5,8 @@ import { createClient } from '../supabase/server';
 import QueueManager from '@/lib/redis/qclient';
 
 type Cost = {
-  cost_name: string;
-  base_cost: number;
+  pricing_category: string;
+  rate_amount: number;
   enforce_minimum: boolean;
 };
 
@@ -108,17 +108,17 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
     const costsMap: Record<number, Partial<Cost>> = {};
 
     Object.keys(data).forEach((key) => {
-      if (key.startsWith('cost_name-')) {
-        // Extract the index from the field name, e.g. 'cost_name-2' => 2
-        const index = parseInt(key.replace('cost_name-', ''), 10);
+      if (key.startsWith('pricing_category-')) {
+        // Extract the index from the field name, e.g. 'pricing_category-2' => 2
+        const index = parseInt(key.replace('pricing_category-', ''), 10);
         if (!costsMap[index]) costsMap[index] = {};
-        costsMap[index].cost_name = data[key];
+        costsMap[index].pricing_category = data[key];
       }
 
-      if (key.startsWith('base_cost-')) {
-        const index = parseInt(key.replace('base_cost-', ''), 10);
+      if (key.startsWith('rate_amount-')) {
+        const index = parseInt(key.replace('rate_amount-', ''), 10);
         if (!costsMap[index]) costsMap[index] = {};
-        costsMap[index].base_cost = parseFloat(data[key]) || 0;
+        costsMap[index].rate_amount = parseFloat(data[key]) || 0;
       }
 
       if (key.startsWith('enforce_minimum-')) {
@@ -133,8 +133,8 @@ export async function editTeamMetadata(prevState: any, formData: FormData) {
     const costs: Cost[] = Object.keys(costsMap).map((idx) => {
       const partial = costsMap[+idx];
       return {
-        cost_name: partial.cost_name ?? '',
-        base_cost: partial.base_cost ?? 0,
+        pricing_category: partial.pricing_category ?? '',
+        rate_amount: partial.rate_amount ?? 0,
         enforce_minimum: partial.enforce_minimum ?? false,
       };
     });
@@ -271,8 +271,8 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
   'use server';
 
   const id = formData.get('record_id') as string;
-  const firstName = formData.get('first_name') as string;
-  const lastName = formData.get('last_name') as string;
+  const first_name = formData.get('first_name') as string;
+  const last_name = formData.get('last_name') as string;
   const email = formData.get('email') as string;
   const length = formData.get('length') as string;
   const width = formData.get('width') as string;
@@ -282,15 +282,17 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
   const rounded_height = formData.get('rounded_height') as string;
   const quantity = formData.get('quantity') as string;
   const cost = formData.get('cost') as string;
-  const firingType = formData.get('firing_type') as string;
-  const nonMember = formData.get('non_member') as string;
+  const firing_type = formData.get('firing_type') as string;
+  // const nonMember = formData.get('non_member') as string;
+  const pricing_category = formData.get('pricing_category') as string;
+  const rate_amount = formData.get('rate_amount') as string;
   const supabase = createClient();
 
   const { data, error } = await supabase
     .from('kiln_requests')
     .update({
-      first_name: firstName,
-      last_name: lastName,
+      first_name,
+      last_name,
       email,
       length,
       width,
@@ -300,8 +302,10 @@ export async function updateKilnRequest(prevState: any, formData: FormData) {
       rounded_height,
       quantity,
       cost,
-      firing_type: firingType,
-      non_member: nonMember,
+      firing_type,
+      pricing_category,
+      rate_amount,
+      // non_member: nonMember,
     })
     .eq('id', id)
     .select();

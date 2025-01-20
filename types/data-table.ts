@@ -28,8 +28,8 @@ export interface DataTableProps<TData, TValue> {
 }
 
 export type Cost = {
-  cost_name: string;
-  base_cost: number;
+  pricing_category: string;
+  rate_amount: number;
   enforce_minimum: boolean;
 };
 export interface Metadata {

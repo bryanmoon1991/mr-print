@@ -90,7 +90,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
 
   const [costs, setCosts] = useState<Cost[]>(metadata.costs);
   const [selectedCost, setSelectedCost] = useState<Cost | undefined>(undefined);
-  const [unitCost, setUnitCost] = useState<number>(metadata.costs[0].base_cost);
+  const [unitCost, setUnitCost] = useState<number>(metadata.costs[0].rate_amount);
   const [baseCost, setBaseCost] = useState<number>(0);
   const minCost = Number(metadata.minimum_cost);
 
@@ -99,14 +99,14 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   // }, [selectedCost])
 
   const handleCostChange = (selectedOption: string) => {
-    let option = costs.find((cost) => cost.cost_name === selectedOption);
+    let option = costs.find((cost) => cost.pricing_category === selectedOption);
     setSelectedCost(option);
-    setUnitCost(option?.base_cost || 0);
+    setUnitCost(option?.rate_amount || 0);
   };
 
   useEffect(() => {
     if (roundedLength && roundedWidth && roundedHeight) {
-      // const unitCost = selectedCost ? selectedCost.base_cost : 0;
+      // const unitCost = selectedCost ? selectedCost.rate_amount : 0;
       // setUnitCost(unitCost);
 
       const baseCost = roundedLength * roundedWidth * roundedHeight * unitCost;
@@ -395,19 +395,19 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               <Label htmlFor='pricing_category'>Rate Type</Label>
               <RadioGroup
                 name='pricing_category'
-                defaultValue={costs[0].cost_name}
+                defaultValue={costs[0].pricing_category}
                 onValueChange={handleCostChange}
               >
                 {costs.map((cost) => (
                   <div
-                    key={cost.cost_name}
+                    key={cost.pricing_category}
                     className='flex items-center space-x-2'
                   >
                     <RadioGroupItem
-                      value={cost.cost_name}
-                      id={cost.cost_name}
+                      value={cost.pricing_category}
+                      id={cost.pricing_category}
                     />
-                    <Label htmlFor={cost.cost_name}>{cost.cost_name}</Label>
+                    <Label htmlFor={cost.pricing_category}>{cost.pricing_category}</Label>
                   </div>
                 ))}
               </RadioGroup>
@@ -510,8 +510,8 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                   Rounded Length: <strong>{roundedLength}</strong> x Rounded
                   Width: <strong>{roundedWidth}</strong> x Rounded Height:{' '}
                   <strong>{roundedHeight}</strong> x{' '}
-                  {`${selectedCost?.cost_name} Cost: `}
-                  <strong>${selectedCost?.base_cost}</strong> ={' '}
+                  {`${selectedCost?.pricing_category} Cost: `}
+                  <strong>${selectedCost?.rate_amount}</strong> ={' '}
                   <strong>${baseCost}</strong>
                   <br />
                   {baseCost < minCost &&

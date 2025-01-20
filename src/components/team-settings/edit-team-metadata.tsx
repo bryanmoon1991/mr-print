@@ -264,27 +264,27 @@ export default function EditTeamMetadata({ account }: Props) {
             {value.map((cost, index) => (
               <div key={`${key}-${index}`} className='flex gap-1'>
                 <div className='grid w-full max-w-sm items-start gap-1.5'>
-                  <Label htmlFor={`cost_name-${index}`}>Cost Name</Label>
+                  <Label htmlFor={`pricing_category-${index}`}>Cost Name</Label>
                   <Input
-                    defaultValue={(cost as Cost).cost_name}
-                    name={`cost_name-${index}`}
+                    defaultValue={(cost as Cost).pricing_category}
+                    name={`pricing_category-${index}`}
                     onChange={(e) =>
-                      handleCostChange(index, 'cost_name', e.target.value)
+                      handleCostChange(index, 'pricing_category', e.target.value)
                     }
                   />
                 </div>
 
-                {/* base_cost input */}
+                {/* rate_amount input */}
                 <div className='grid w-full max-w-sm items-start gap-1.5'>
-                  <Label htmlFor={`base_cost-${index}`}>Base Cost</Label>
+                  <Label htmlFor={`rate_amount-${index}`}>Base Cost</Label>
                   <Input
                     type='number'
                     step='0.01'
                     min='0'
-                    defaultValue={(cost as Cost).base_cost}
-                    name={`base_cost-${index}`}
+                    defaultValue={(cost as Cost).rate_amount}
+                    name={`rate_amount-${index}`}
                     onChange={(e) =>
-                      handleCostChange(index, 'base_cost', e.target.value)
+                      handleCostChange(index, 'rate_amount', e.target.value)
                     }
                   />
                 </div>
@@ -400,7 +400,7 @@ export default function EditTeamMetadata({ account }: Props) {
           return {
             ...cost,
             [field]:
-              field === 'base_cost' ? parseFloat(value as string) || 0 : value, // parseFloat for numbers, direct assignment otherwise
+              field === 'rate_amount' ? parseFloat(value as string) || 0 : value, // parseFloat for numbers, direct assignment otherwise
           };
         }
         return cost;
@@ -455,8 +455,8 @@ export default function EditTeamMetadata({ account }: Props) {
       if (key === 'costs') {
         // Add a new Cost item with default values
         const newCost: Cost = {
-          base_cost: 0.0,
-          cost_name: 'New Cost',
+          rate_amount: 0.0,
+          pricing_category: 'New Cost',
           enforce_minimum: false,
         };
         return {

@@ -106,7 +106,9 @@ export function DataTable<TData, TValue>({
   const [cost, setCost] = useState(0);
   const [baseCost, setBaseCost] = useState<number>(0);
 
-  const [customCost, setCustomCost] = useState<Cost | 'Custom' | undefined>(undefined);
+  const [pricingData, setPricingData] = useState<Cost | 'Custom' | undefined>(
+    undefined
+  );
   const [pricingCategory, setPricingCategory] = useState<string>('');
   const [rateAmount, setRateAmount] = useState<number>(0);
 
@@ -133,9 +135,9 @@ export function DataTable<TData, TValue>({
 
     // actual custom cost from account metadata
     let option = account.metadata.costs.find(
-      (cost) => cost.cost_name === rowData.pricing_category
+      (cost) => cost.pricing_category === rowData.pricing_category
     );
-    setCustomCost(option || 'Custom');
+    setPricingData(option || 'Custom');
 
     setCost(Number(rowData.cost));
     setIsDialogOpen(true);
@@ -207,18 +209,18 @@ export function DataTable<TData, TValue>({
 
   const handleCostChange = (selectedOption: string) => {
     if (selectedOption === 'Custom') {
-      setCustomCost(selectedOption);
+      setPricingData(selectedOption);
       setPricingCategory('');
       setRateAmount(0);
       return;
     }
 
     let option = account.metadata.costs.find(
-      (cost) => cost.cost_name === selectedOption
+      (cost) => cost.pricing_category === selectedOption
     );
-    setCustomCost(option);
-    setPricingCategory(option?.cost_name || '');
-    setRateAmount(option?.base_cost || 0);
+    setPricingData(option);
+    setPricingCategory(option?.pricing_category || '');
+    setRateAmount(option?.rate_amount || 0);
   };
 
   const handleCloseDialog = () => {
@@ -236,7 +238,11 @@ export function DataTable<TData, TValue>({
     setBaseCost(parseFloat(baseCost.toFixed(2)));
 
     let calcCost;
-    if (baseCost < minCost && customCost != 'Custom' && customCost?.enforce_minimum) {
+    if (
+      baseCost < minCost &&
+      pricingData != 'Custom' &&
+      pricingData?.enforce_minimum
+    ) {
       calcCost = parseFloat((minCost * quantity).toFixed(2));
     } else {
       calcCost = parseFloat((baseCost * quantity).toFixed(2));
@@ -787,21 +793,23 @@ export function DataTable<TData, TValue>({
                   name='pricing_category'
                   defaultValue={
                     account.metadata.costs.find(
-                      (c) => c.cost_name == pricingCategory
-                    )?.cost_name || 'Custom'
+                      (c) => c.pricing_category == pricingCategory
+                    )?.pricing_category || 'Custom'
                   }
                   onValueChange={handleCostChange}
                 >
                   {account.metadata.costs.map((cost) => (
                     <div
-                      key={cost.cost_name}
+                      key={cost.pricing_category}
                       className='flex items-center space-x-2'
                     >
                       <RadioGroupItem
-                        value={cost.cost_name}
-                        id={cost.cost_name}
+                        value={cost.pricing_category}
+                        id={cost.pricing_category}
                       />
-                      <Label htmlFor={cost.cost_name}>{cost.cost_name}</Label>
+                      <Label htmlFor={cost.pricing_category}>
+                        {cost.pricing_category}
+                      </Label>
                     </div>
                   ))}
                   <div key='custom' className='flex items-center space-x-2'>
@@ -811,7 +819,11 @@ export function DataTable<TData, TValue>({
                 </RadioGroup>
               </div>
 
-              <div className='grid grid-cols-4 items-center gap-4'>
+              <div
+                className={`grid grid-cols-4 items-center gap-4 ${
+                  pricingData != 'Custom' ? 'invisible h-0' : ''
+                }`}
+              >
                 <Label htmlFor='pricing_category' className='text-right'>
                   Pricing Category
                 </Label>
@@ -825,7 +837,11 @@ export function DataTable<TData, TValue>({
                 />
               </div>
 
-              <div className='grid grid-cols-4 items-center gap-4'>
+              <div
+                className={`grid grid-cols-4 items-center gap-4 ${
+                  pricingData != 'Custom' ? 'invisible h-0' : ''
+                }`}
+              >
                 <Label htmlFor='rate_amount' className='text-right'>
                   Rate Amount
                 </Label>
@@ -882,14 +898,26 @@ export function DataTable<TData, TValue>({
                     Rounded Length: <strong>{roundedLength}</strong> x Rounded
                     Width: <strong>{roundedWidth}</strong> x Rounded Height:{' '}
                     <strong>{roundedHeight}</strong> x{' '}
-                    {`${customCost != 'Custom' ? customCost?.cost_name : customCost } Cost: `}
-                    <strong>${customCost != 'Custom' ? customCost?.base_cost : rateAmount }</strong> ={' '}
-                    <strong>${baseCost}</strong>
+                    {`${
+                      pricingData != 'Custom'
+                        ? pricingData?.pricing_category
+                        : pricingData
+                    } Cost: `}
+                    <strong>
+                      $
+                      {pricingData != 'Custom'
+                        ? pricingData?.rate_amount
+                        : rateAmount}
+                    </strong>{' '}
+                    = <strong>${baseCost}</strong>
                     <br />
-                    {baseCost < minCost && customCost != 'Custom' &&
-                      customCost?.enforce_minimum &&
+                    {baseCost < minCost &&
+                      pricingData != 'Custom' &&
+                      pricingData?.enforce_minimum &&
                       'Base cost is less than minimum cost, so minimum cost will be applied.'}
-                    {baseCost < minCost && customCost != 'Custom' && customCost?.enforce_minimum ? (
+                    {baseCost < minCost &&
+                    pricingData != 'Custom' &&
+                    pricingData?.enforce_minimum ? (
                       <>
                         <br />
                         <span>
@@ -915,7 +943,9 @@ export function DataTable<TData, TValue>({
                   id='cost'
                   name='cost'
                   value={
-                    cost < account.metadata.minimum_cost && customCost != 'Custom' && customCost?.enforce_minimum
+                    cost < account.metadata.minimum_cost &&
+                    pricingData != 'Custom' &&
+                    pricingData?.enforce_minimum
                       ? account.metadata.minimum_cost
                       : cost
                   }
