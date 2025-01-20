@@ -507,7 +507,7 @@ export function DataTable<TData, TValue>({
                       className='self-center'
                       htmlFor='includeExportedToggle'
                     >
-                      Filter Exported?:
+                      Only Non Exported?:
                     </Label>
                     <Switch
                       checked={filterExported}
@@ -544,7 +544,7 @@ export function DataTable<TData, TValue>({
                         <TooltipContent side='right'>
                           <p className='text-xs'>
                             when toggled on, we will include another csv that
-                            shows you totals grouped by name
+                            shows you totals grouped by EMAIL 
                           </p>
                         </TooltipContent>
                       </Tooltip>

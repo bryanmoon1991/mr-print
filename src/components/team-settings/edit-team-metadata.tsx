@@ -308,7 +308,7 @@ export default function EditTeamMetadata({ account }: Props) {
               variant='default'
               onClick={(e) => handleAddArrayItem(e, key as keyof Metadata)}
             >
-              Add {labelText}
+              Add Price
             </Button>
           </div>
         );

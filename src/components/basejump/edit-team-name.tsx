@@ -22,16 +22,16 @@ export default function EditTeamName({ account }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Team Info</CardTitle>
+        <CardTitle>Printer Info</CardTitle>
         <CardDescription>
-          Your team name and identifier are unique for your team
+          Your printer name must be unique, duplicate names are not allowed.
         </CardDescription>
       </CardHeader>
         <Alert className='max-w-[90%] mb-6 justify-self-center' variant='destructive'>
           <MessageCircleWarningIcon className='h-4 w-4' />
           <AlertTitle>Warning!</AlertTitle>
           <AlertDescription>
-            Changing your team name will also changes the format of your QR
+            Changing your printer name will also change the format of your QR
             Code!
           </AlertDescription>
         </Alert>
@@ -39,11 +39,11 @@ export default function EditTeamName({ account }: Props) {
         <input type='hidden' name='accountId' value={account.account_id} />
         <CardContent className='flex flex-col gap-y-6'>
           <div className='flex flex-col gap-y-2'>
-            <Label htmlFor='name'>Team Name</Label>
+            <Label htmlFor='name'>Printer Name</Label>
             <Input
               defaultValue={account.name}
               name='name'
-              placeholder='My Team'
+              placeholder='My Printer'
               required
             />
           </div>
