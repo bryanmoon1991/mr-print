@@ -11,6 +11,7 @@ import { editTeamMetadata } from '@/lib/actions/teams';
 import { Label } from '../ui/label';
 import { Switch } from '@/components/ui/switch';
 import { GetAccountResponse } from '@usebasejump/shared';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Card,
   CardContent,
@@ -19,15 +20,8 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+
+import { Cost, Metadata } from '@/../types/data-table';
 
 import { Textarea } from '../ui/textarea';
 import { v4 as uuidv4 } from 'uuid';
@@ -35,26 +29,6 @@ import { v4 as uuidv4 } from 'uuid';
 type Props = {
   account: GetAccountResponse;
 };
-
-type ExtendedProps = Props & {
-  member_cost: number;
-  non_member_cost: number;
-  minimum_cost: number;
-  terms_and_conditions: string;
-  firing_types: string[];
-};
-
-export interface Metadata {
-  logo: { logo_url: string; filename: string };
-  member_cost: number;
-  non_member_cost: number;
-  minimum_cost: number;
-  firing_types: string[];
-  opt_in: {
-    required: boolean;
-  };
-  terms_and_conditions: string;
-}
 
 interface UploadResponse {
   id: string;
@@ -90,7 +64,7 @@ export default function EditTeamMetadata({ account }: Props) {
 
     const fileName = `${account.account_id}_${uuidv4()}_${file.name}`; // Create a unique filename
     const { data, error } = (await supabase.storage
-      .from('logos') 
+      .from('logos')
       .upload(fileName, file)) as { data: UploadResponse | null; error: Error };
 
     if (error) {
@@ -132,8 +106,7 @@ export default function EditTeamMetadata({ account }: Props) {
 
   const orderedKeys: (keyof Metadata)[] = [
     'logo',
-    'member_cost',
-    'non_member_cost',
+    'costs',
     'minimum_cost',
     'firing_types',
     'opt_in',
@@ -251,8 +224,6 @@ export default function EditTeamMetadata({ account }: Props) {
           </div>
         );
       } else if (
-        key === 'member_cost' ||
-        key === 'non_member_cost' ||
         key === 'minimum_cost'
       ) {
         return (
@@ -281,14 +252,74 @@ export default function EditTeamMetadata({ account }: Props) {
             />
           </div>
         );
-      } else if (Array.isArray(value)) {
+      } else if (key === 'costs' && Array.isArray(value)) {
+        return (
+          <div key={key} className='flex flex-col gap-1'>
+            {value.map((cost, index) => (
+              <div key={`${key}-${index}`} className='flex gap-1'>
+                <div className='grid w-full max-w-sm items-start gap-1.5'>
+                  <Label htmlFor={`pricing_category-${index}`}>Pricing Category</Label>
+                  <Input
+                    defaultValue={(cost as Cost).pricing_category}
+                    name={`pricing_category-${index}`}
+                    onChange={(e) =>
+                      handleCostChange(index, 'pricing_category', e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className='grid w-full max-w-sm items-start gap-1.5'>
+                  <Label htmlFor={`rate_amount-${index}`}>Rate Amount</Label>
+                  <Input
+                    type='number'
+                    step='0.01'
+                    min='0'
+                    defaultValue={(cost as Cost).rate_amount}
+                    name={`rate_amount-${index}`}
+                    onChange={(e) =>
+                      handleCostChange(index, 'rate_amount', e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className='grid max-w-sm items-start gap-1.5'>
+                  <Label
+                    htmlFor={`enforce_minimum-${index}`}
+                    className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 whitespace-nowrap'
+                  >
+                    Enforce Minimum
+                  </Label>
+                  <Checkbox
+                    name={`enforce_minimum-${index}`}
+                    checked={(cost as Cost).enforce_minimum}
+                    onCheckedChange={(e) =>
+                      handleCostChange(index, 'enforce_minimum', e)
+                    }
+                  />
+                </div>
+                <X
+                  type='button'
+                  className='flex-none cursor-pointer self-center'
+                  onClick={() => removeArrayItem(key as keyof Metadata, index)}
+                />
+              </div>
+            ))}
+            <Button
+              variant='default'
+              onClick={(e) => handleAddArrayItem(e, key as keyof Metadata)}
+            >
+              Add Price
+            </Button>
+          </div>
+        );
+      } else if (key === 'firing_types' && Array.isArray(value)) {
         return (
           <div key={key} className='flex flex-col gap-1'>
             <Label>{labelText}</Label>
             {value.map((item, index) => (
               <div key={`${key}-${index}`} className='flex gap-1'>
                 <Input
-                  defaultValue={item}
+                  defaultValue={item as string}
                   name={`${key}-${index}`}
                   onChange={(e) =>
                     handleArrayChange(
@@ -306,7 +337,7 @@ export default function EditTeamMetadata({ account }: Props) {
               </div>
             ))}
             <Button
-              variant='secondary'
+              variant='default'
               onClick={(e) => handleAddArrayItem(e, key as keyof Metadata)}
             >
               Add {labelText}
@@ -344,6 +375,30 @@ export default function EditTeamMetadata({ account }: Props) {
     }
   };
 
+  useEffect(() => {
+    console.log(formData);
+  }, [formData]);
+
+  const handleCostChange = (
+    index: number,
+    field: keyof Cost,
+    value: string | number | boolean
+  ) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      costs: prevData.costs.map((cost, i) => {
+        if (i === index) {
+          return {
+            ...cost,
+            [field]:
+              field === 'rate_amount' ? parseFloat(value as string) || 0 : value, // parseFloat for numbers, direct assignment otherwise
+          };
+        }
+        return cost;
+      }),
+    }));
+  };
+
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     // Ensure the input is valid number or empty string
@@ -373,16 +428,40 @@ export default function EditTeamMetadata({ account }: Props) {
     }));
   };
 
-  const addArrayItem = (key: keyof Metadata) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [key]: [...(prevData[key] as string[]), ''], // Add an empty string initially
-    }));
-  };
+  // const addArrayItem = (key: keyof Metadata) => {
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     [key]: [...(prevData[key] as string[]), ''], // Add an empty string initially
+  //   }));
+  // };
+
+  // const handleAddArrayItem = (e: React.MouseEvent, key: keyof Metadata) => {
+  //   e.preventDefault();
+  //   addArrayItem(key);
+  // };
 
   const handleAddArrayItem = (e: React.MouseEvent, key: keyof Metadata) => {
     e.preventDefault();
-    addArrayItem(key);
+    setFormData((prevData) => {
+      if (key === 'costs') {
+        // Add a new Cost item with default values
+        const newCost: Cost = {
+          rate_amount: 0.0,
+          pricing_category: 'New Cost',
+          enforce_minimum: false,
+        };
+        return {
+          ...prevData,
+          costs: [...(prevData.costs ?? []), newCost],
+        };
+      } else {
+        // Fallback behavior for other array fields, e.g. firing_types, which might just add an empty string
+        return {
+          ...prevData,
+          [key]: [...(prevData[key] as string[]), ''],
+        };
+      }
+    });
   };
 
   return (

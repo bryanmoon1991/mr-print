@@ -5,13 +5,6 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Label } from '../ui/label';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
 import { SubmitButton } from '../ui/submit-button';
 import { addKilnRequest } from '@/lib/actions/teams';
 import { Checkbox } from '../ui/checkbox';
@@ -23,21 +16,12 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Button } from '../ui/button';
 import { Upload, Loader2, X, AlertCircle, InfoIcon } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { v4 as uuidv4 } from 'uuid';
-
-interface Metadata {
-  opt_in: {
-    required: boolean;
-  };
-  member_cost: number;
-  non_member_cost: number;
-  minimum_cost: number;
-  firing_types: string[];
-  terms_and_conditions: string;
-}
+import { Metadata, Cost } from '@/../types/data-table';
 
 interface FormProps {
   metadata: Metadata;
@@ -73,8 +57,8 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [roundedWidth, setRoundedWidth] = useState<number | ''>(0);
   const [roundedHeight, setRoundedHeight] = useState<number | ''>(0);
   const [quantity, setQuantity] = useState<number>(1);
-  const [nonMember, setNonMember] = useState<boolean>(false);
-  const [firingType, setFiringType] = useState<string>(
+  const [firingTypes, setFiringTypes] = useState<string[]>(metadata.firing_types);
+  const [selectedFiringType, setSelectedFiringType] = useState<string>(
     metadata.firing_types[0]
   );
   const [photoUrl, setPhotoUrl] = useState<string>('');
@@ -82,23 +66,29 @@ export default function KilnRequestForm({ metadata }: FormProps) {
   const [error, setError] = useState<string>('');
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploaded, setUploaded] = useState<string>('');
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
 
-  const [unitCost, setUnitCost] = useState<number>(0);
+  const [costs, setCosts] = useState<Cost[]>(metadata.costs);
+  const [selectedCost, setSelectedCost] = useState<Cost>(metadata.costs[0]);
+  const [unitCost, setUnitCost] = useState<number>(metadata.costs[0].rate_amount);
   const [baseCost, setBaseCost] = useState<number>(0);
   const minCost = Number(metadata.minimum_cost);
 
+  const handleCostChange = (selectedOption: string) => {
+    let option = costs.find((cost) => cost.pricing_category === selectedOption);
+    if (option) {
+      setSelectedCost(option);
+      setUnitCost(option?.rate_amount || 0);
+    }
+  };
+
   useEffect(() => {
     if (roundedLength && roundedWidth && roundedHeight) {
-      const unitCost = nonMember
-        ? Number(metadata.non_member_cost)
-        : Number(metadata.member_cost);
-      setUnitCost(unitCost);
-
       const baseCost = roundedLength * roundedWidth * roundedHeight * unitCost;
       setBaseCost(parseFloat(baseCost.toFixed(2)));
 
       let calcCost;
-      if (baseCost < minCost) {
+      if (baseCost < minCost && selectedCost?.enforce_minimum) {
         calcCost = parseFloat((minCost * quantity).toFixed(2));
       } else {
         calcCost = parseFloat((baseCost * quantity).toFixed(2));
@@ -110,7 +100,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
     roundedWidth,
     roundedHeight,
     quantity,
-    nonMember,
+    selectedCost,
     metadata,
   ]);
 
@@ -118,18 +108,14 @@ export default function KilnRequestForm({ metadata }: FormProps) {
     setOptIn(checked);
   };
 
-  const handleNonMemberChecked = (checked: boolean) => {
-    setNonMember(checked);
-  };
-
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (file: File, inputRef: HTMLInputElement) => {
     if (!file) return;
 
     setUploading(true);
     setError('');
-    const fileName = `${accountId}_${firstName}_${lastName}-${
-      uuidv4()
-    }-${file.name}`; // Create a unique filename
+    const fileName = `${accountId}_${firstName}_${lastName}-${uuidv4()}-${
+      file.name
+    }`; // Create a unique filename
     const { data, error } = (await supabase.storage
       .from('photos') // replace 'photos' with your bucket name
       .upload(fileName, file)) as { data: UploadResponse | null; error: Error };
@@ -141,6 +127,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
       if (data && data.fullPath) {
         setPhotoUrl(process.env.NEXT_PUBLIC_PUBLIC_S3_URL! + data.fullPath);
         setUploaded(data.path);
+        inputRef.value = '';
       }
       console.log('PHOTO file uploaded successfully:', data);
     }
@@ -159,6 +146,7 @@ export default function KilnRequestForm({ metadata }: FormProps) {
     } else {
       if (data && data[0]['name'] == uploaded) {
         setUploaded('');
+        setIsImageLoaded(false);
         setPhotoUrl('');
         setError('');
       }
@@ -172,7 +160,6 @@ export default function KilnRequestForm({ metadata }: FormProps) {
         <CardTitle>Fire a Piece!</CardTitle>
         <CardDescription>Kiln Request Form</CardDescription>
       </CardHeader>
-      {/* {message && <p>{message}</p>} */}
       <form className='animate-in flex-1 text-foreground'>
         <input type='hidden' name='slug' value={accountSlug} />
         <input type='hidden' name='accountId' value={accountId || ''} />
@@ -233,100 +220,105 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-
-            <Label htmlFor='length'>Length</Label>
-            <Input
-              type='number'
-              id='length'
-              name='length'
-              value={length}
-              onChange={(e) => {
-                setLength(Number(e.target.value));
-                setRoundedLength(
-                  Number(e.target.value) < 2
-                    ? 2
-                    : Math.ceil(Number(e.target.value) * 2) / 2
-                );
-              }}
-              onFocus={(e) => {
-                if (height === 0) {
-                  setLength('');
-                }
-              }}
-              onBlur={(e) => {
-                if (e.target.value === '') {
-                  setLength(0); // Reset to 0 if the user leaves the field empty
-                }
-              }}
-              required
-            />
-
-            <Label htmlFor='width'>Width</Label>
-            <Input
-              type='number'
-              id='width'
-              name='width'
-              value={width}
-              onChange={(e) => {
-                setWidth(Number(e.target.value));
-                setRoundedWidth(
-                  Number(e.target.value) < 2
-                    ? 2
-                    : Math.ceil(Number(e.target.value) * 2) / 2
-                );
-              }}
-              onFocus={(e) => {
-                if (height === 0) {
-                  setWidth('');
-                }
-              }}
-              onBlur={(e) => {
-                if (e.target.value === '') {
-                  setWidth(0); // Reset to 0 if the user leaves the field empty
-                }
-              }}
-              required
-            />
-
-            <Label htmlFor='height'>Height</Label>
-            <Input
-              type='number'
-              id='height'
-              name='height'
-              value={height}
-              onChange={(e) => {
-                setHeight(Number(e.target.value));
-                setRoundedHeight(
-                  Number(e.target.value) < 2
-                    ? 2
-                    : Math.ceil(Number(e.target.value) * 2) / 2
-                );
-              }}
-              onFocus={(e) => {
-                if (height === 0) {
-                  setHeight('');
-                }
-              }}
-              onBlur={(e) => {
-                if (e.target.value === '') {
-                  setHeight(0); // Reset to 0 if the user leaves the field empty
-                }
-              }}
-              required
-            />
-
-            <Label htmlFor='quantity'>Quantity</Label>
-            <Input
-              type='number'
-              id='quantity'
-              name='quantity'
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              min={1}
-              required
-            />
-
-            <div className='flex flex-col gap-y-2'>
+            <div className='w-full flex justify-between'>
+              <div className='flex flex-col gap-y-2'>
+                <Label htmlFor='length'>Length</Label>
+                <Input
+                  type='number'
+                  id='length'
+                  name='length'
+                  value={length}
+                  onChange={(e) => {
+                    setLength(Number(e.target.value));
+                    setRoundedLength(
+                      Number(e.target.value) < 2
+                        ? 2
+                        : Math.ceil(Number(e.target.value) * 2) / 2
+                    );
+                  }}
+                  onFocus={(e) => {
+                    if (height === 0) {
+                      setLength('');
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setLength(0); // Reset to 0 if the user leaves the field empty
+                    }
+                  }}
+                  required
+                />
+              </div>
+              <div className='flex flex-col gap-y-2'>
+                <Label htmlFor='width'>Width</Label>
+                <Input
+                  type='number'
+                  id='width'
+                  name='width'
+                  value={width}
+                  onChange={(e) => {
+                    setWidth(Number(e.target.value));
+                    setRoundedWidth(
+                      Number(e.target.value) < 2
+                        ? 2
+                        : Math.ceil(Number(e.target.value) * 2) / 2
+                    );
+                  }}
+                  onFocus={(e) => {
+                    if (height === 0) {
+                      setWidth('');
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setWidth(0); // Reset to 0 if the user leaves the field empty
+                    }
+                  }}
+                  required
+                />
+              </div>
+              <div className='flex flex-col gap-y-2'>
+                <Label htmlFor='height'>Height</Label>
+                <Input
+                  type='number'
+                  id='height'
+                  name='height'
+                  value={height}
+                  onChange={(e) => {
+                    setHeight(Number(e.target.value));
+                    setRoundedHeight(
+                      Number(e.target.value) < 2
+                        ? 2
+                        : Math.ceil(Number(e.target.value) * 2) / 2
+                    );
+                  }}
+                  onFocus={(e) => {
+                    if (height === 0) {
+                      setHeight('');
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setHeight(0); // Reset to 0 if the user leaves the field empty
+                    }
+                  }}
+                  required
+                />
+              </div>
+              <div className='flex flex-col gap-y-2'>
+                <Label htmlFor='quantity'>Quantity</Label>
+                <Input
+                  type='number'
+                  id='quantity'
+                  name='quantity'
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  min={1}
+                  required
+                />
+              </div>
+            </div>
+            {/* <div className='flex flex-col gap-y-2'>
               <Label htmlFor='firing_type'>Firing Type</Label>
               <Select
                 value={firingType}
@@ -344,30 +336,58 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                   ))}
                 </SelectContent>
               </Select>
+            </div> */}
+
+            <div className='flex flex-col gap-y-2'>
+              <Label htmlFor='firing_type'>Firing Type</Label>
+              <RadioGroup
+                name='firing_type'
+                defaultValue={firingTypes[0]}
+                onValueChange={setSelectedFiringType}
+              >
+                {firingTypes.map((type) => (
+                  <div
+                    key={type}
+                    className='flex items-center space-x-2'
+                  >
+                    <RadioGroupItem
+                      value={type}
+                      id={type}
+                    />
+                    <Label htmlFor={type}>{type}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
             </div>
 
-            <div className='flex items-center space-x-2'>
-              <Label
-                htmlFor='non_member'
-                className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+            <div className='flex flex-col gap-y-2'>
+              <Label htmlFor='pricing_category'>Rate Type</Label>
+              <RadioGroup
+                name='pricing_category'
+                defaultValue={selectedCost.pricing_category}
+                onValueChange={handleCostChange}
               >
-                Non-Member
-              </Label>
-              <Checkbox
-                id='non_member'
-                name='non_member'
-                checked={nonMember}
-                onCheckedChange={handleNonMemberChecked}
-              />
+                {costs.map((cost) => (
+                  <div
+                    key={cost.pricing_category}
+                    className='flex items-center space-x-2'
+                  >
+                    <RadioGroupItem
+                      value={cost.pricing_category}
+                      id={cost.pricing_category}
+                    />
+                    <Label htmlFor={cost.pricing_category}>{cost.pricing_category}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
             </div>
+
             <div>
-              {/* <Label htmlFor='photo_url'>Photo</Label> */}
               <Input
                 type='hidden'
                 id='photo_url'
                 name='photo_url'
                 value={photoUrl}
-                // onChange={(e) => setPhotoUrl(e.target.value)}
               />
               <Button
                 disabled={uploading}
@@ -385,8 +405,9 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                     accept='image/*'
                     capture='environment'
                     onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        handleUpload(e.target.files[0]);
+                      const fileInput = e.target as HTMLInputElement;
+                      if (fileInput.files?.[0]) {
+                        handleUpload(fileInput.files[0], fileInput);
                       }
                     }}
                   />
@@ -410,41 +431,62 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              {uploaded && photoUrl && (
-                <div className='max-w-[60%] h-auto relative self-center'>
-                  <X
-                    className='absolute top-0 right-0 cursor-pointer'
-                    onClick={handleDelete}
-                  />
+              {uploading ? (
+                // 2. Still uploading to server? Show loader/spinner
+                <div className='flex items-center gap-2'>
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  <p>Uploading your image...</p>
+                </div>
+              ) : uploaded && photoUrl ? (
+                // 3. Upload to server is done; now wait for the actual image to load in the browser
+                <div className='w-full h-auto relative'>
+                  {/* Optionally show a loading message/spinner until the actual image data is loaded */}
+                  {!isImageLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/70">
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      <p>Loading image...</p>
+                    </div>
+                  )}
+
+                  {/* Hide the "X" until the image is loaded */}
+                  {isImageLoaded && (
+                    <X
+                      className='absolute top-0 right-0 cursor-pointer'
+                      onClick={handleDelete}
+                    />
+                  )}
+
                   <img
                     src={photoUrl}
                     alt={uploaded}
-                    className='w-auto h-auto'
+                    className={`w-auto h-auto transition-opacity ${
+                      isImageLoaded ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    onLoad={() => setIsImageLoaded(true)}
                   />
                 </div>
-              )}
+              ) : null}
             </div>
+
             <input type='hidden' name='rounded_length' value={roundedLength} />
             <input type='hidden' name='rounded_width' value={roundedWidth} />
             <input type='hidden' name='rounded_height' value={roundedHeight} />
+            <input type='hidden' name='rate_amount' value={unitCost} />
+
             {cost != 0 && (
               <div className='w-full text-xs text-right'>
                 <span className=''>
                   Rounded Length: <strong>{roundedLength}</strong> x Rounded
                   Width: <strong>{roundedWidth}</strong> x Rounded Height:{' '}
                   <strong>{roundedHeight}</strong> x{' '}
-                  {nonMember ? 'Non-Member Cost: ' : 'Member Cost: '}
-                  <strong>
-                    $
-                    {nonMember
-                      ? metadata.non_member_cost
-                      : metadata.member_cost}
-                  </strong>{' '}
-                  = <strong>${baseCost}</strong>
+                  {`${selectedCost?.pricing_category} Cost: `}
+                  <strong>${selectedCost?.rate_amount}</strong> ={' '}
+                  <strong>${baseCost}</strong>
                   <br />
                   {baseCost < minCost &&
+                    selectedCost?.enforce_minimum &&
                     'Base cost is less than minimum cost, so minimum cost will be applied.'}
-                  {baseCost < minCost ? (
+                  {baseCost < minCost && selectedCost?.enforce_minimum ? (
                     <>
                       <br />
                       <span>
@@ -466,9 +508,6 @@ export default function KilnRequestForm({ metadata }: FormProps) {
               type='number'
               id='cost'
               name='cost'
-              // value={
-              //   cost < metadata.minimum_cost ? metadata.minimum_cost : cost
-              // }
               value={cost}
               readOnly
             />

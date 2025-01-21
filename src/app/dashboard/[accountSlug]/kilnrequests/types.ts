@@ -14,7 +14,8 @@ export type KilnRequest = {
   quantity: number;
   cost: string;
   firing_type: string;
-  non_member: boolean | null;
+  pricing_category: string;
+  rate_amount: number;
   photo_url: string | null;
   printed: boolean;
   exported: boolean;

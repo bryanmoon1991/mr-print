@@ -52,6 +52,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 import { checkForDuplicate, reprint } from '@/lib/actions/print-requests';
 import { updateKilnRequest } from '@/lib/actions/teams';
@@ -59,6 +60,7 @@ import { toast } from 'sonner';
 import { KilnRequest } from '@/app/dashboard/[accountSlug]/kilnrequests/types';
 import type { DataTableProps } from '../../../types/data-table';
 import type { Updater } from '@tanstack/react-table';
+import type { Cost } from '@/../types/data-table';
 
 export function DataTable<TData, TValue>({
   columns,
@@ -99,11 +101,16 @@ export function DataTable<TData, TValue>({
   const [roundedWidth, setRoundedWidth] = useState(0);
   const [roundedHeight, setRoundedHeight] = useState(0);
   const [quantity, setQuantity] = useState(0);
-  const [nonMember, setNonMember] = useState(false);
   const [firingType, setFiringType] = useState('');
   const [cost, setCost] = useState(0);
-  const [unitCost, setUnitCost] = useState<number>(0);
   const [baseCost, setBaseCost] = useState<number>(0);
+
+  const [pricingData, setPricingData] = useState<Cost | 'Custom' | undefined>(
+    undefined
+  );
+  const [pricingCategory, setPricingCategory] = useState<string>('');
+  const [rateAmount, setRateAmount] = useState<number>(0);
+
   const minCost = Number(account.metadata.minimum_cost);
 
   const openDialogWithRowData = (rowData: KilnRequest) => {
@@ -118,8 +125,18 @@ export function DataTable<TData, TValue>({
     setRoundedWidth(rowData.rounded_width);
     setRoundedHeight(rowData.rounded_height);
     setQuantity(rowData.quantity);
-    setNonMember(rowData.non_member || false);
     setFiringType(rowData.firing_type);
+
+    // values saved in columns for cost
+    setPricingCategory(rowData.pricing_category || '');
+    setRateAmount(rowData.rate_amount || 0);
+
+    // actual custom cost from account metadata
+    let option = account.metadata.costs.find(
+      (cost) => cost.pricing_category === rowData.pricing_category
+    );
+    setPricingData(option || 'Custom');
+
     setCost(Number(rowData.cost));
     setIsDialogOpen(true);
   };
@@ -184,8 +201,20 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const handleNonMemberChecked = (checked: boolean) => {
-    setNonMember(checked);
+  const handleCostChange = (selectedOption: string) => {
+    if (selectedOption === 'Custom') {
+      setPricingData(selectedOption);
+      setPricingCategory('');
+      setRateAmount(0);
+      return;
+    }
+
+    let option = account.metadata.costs.find(
+      (cost) => cost.pricing_category === selectedOption
+    );
+    setPricingData(option);
+    setPricingCategory(option?.pricing_category || '');
+    setRateAmount(option?.rate_amount || 0);
   };
 
   const handleCloseDialog = () => {
@@ -199,21 +228,15 @@ export function DataTable<TData, TValue>({
 
   useEffect(() => {
     if (!account.metadata) return;
-    // const baseCost = roundedLength * roundedWidth * roundedHeight;
-    // const unitCost = nonMember
-    //   ? account.metadata.non_member_cost
-    //   : account.metadata.member_cost;
-    // setCost(Number((baseCost * unitCost * quantity).toFixed(2)));
-    const unitCost = nonMember
-      ? Number(account.metadata.non_member_cost)
-      : Number(account.metadata.member_cost);
-    setUnitCost(unitCost);
-
-    const baseCost = roundedLength * roundedWidth * roundedHeight * unitCost;
+    const baseCost = roundedLength * roundedWidth * roundedHeight * rateAmount;
     setBaseCost(parseFloat(baseCost.toFixed(2)));
 
     let calcCost;
-    if (baseCost < minCost) {
+    if (
+      baseCost < minCost &&
+      pricingData != 'Custom' &&
+      pricingData?.enforce_minimum
+    ) {
       calcCost = parseFloat((minCost * quantity).toFixed(2));
     } else {
       calcCost = parseFloat((baseCost * quantity).toFixed(2));
@@ -224,7 +247,7 @@ export function DataTable<TData, TValue>({
     roundedWidth,
     roundedHeight,
     quantity,
-    nonMember,
+    rateAmount,
     account,
   ]);
 
@@ -484,7 +507,7 @@ export function DataTable<TData, TValue>({
                       className='self-center'
                       htmlFor='includeExportedToggle'
                     >
-                      Filter Exported?:
+                      Only Non Exported?:
                     </Label>
                     <Switch
                       checked={filterExported}
@@ -521,7 +544,7 @@ export function DataTable<TData, TValue>({
                         <TooltipContent side='right'>
                           <p className='text-xs'>
                             when toggled on, we will include another csv that
-                            shows you totals grouped by name
+                            shows you totals grouped by EMAIL 
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -639,7 +662,7 @@ export function DataTable<TData, TValue>({
                   name='length'
                   value={length}
                   onFocus={(e) => {
-                    if (height === 0) {
+                    if (length === 0) {
                       setLength('');
                     }
                   }}
@@ -677,7 +700,7 @@ export function DataTable<TData, TValue>({
                     );
                   }}
                   onFocus={(e) => {
-                    if (height === 0) {
+                    if (width === 0) {
                       setWidth('');
                     }
                   }}
@@ -733,6 +756,108 @@ export function DataTable<TData, TValue>({
                   className='col-span-3'
                 />
               </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='firing_type' className='text-right'>
+                  Firing Type
+                </Label>
+                <Select
+                  value={firingType}
+                  onValueChange={setFiringType}
+                  name='firing_type'
+                >
+                  <SelectTrigger className='col-span-3'>
+                    <SelectValue placeholder='Firing type' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {account.metadata.firing_types.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='pricing_category' className='text-right'>
+                  Pricing Categories
+                </Label>
+                <RadioGroup
+                  name='pricing_category'
+                  defaultValue={
+                    account.metadata.costs.find(
+                      (c) => c.pricing_category == pricingCategory
+                    )?.pricing_category || 'Custom'
+                  }
+                  onValueChange={handleCostChange}
+                >
+                  {account.metadata.costs.map((cost) => (
+                    <div
+                      key={cost.pricing_category}
+                      className='flex items-center space-x-2'
+                    >
+                      <RadioGroupItem
+                        value={cost.pricing_category}
+                        id={cost.pricing_category}
+                      />
+                      <Label htmlFor={cost.pricing_category}>
+                        {cost.pricing_category}
+                      </Label>
+                    </div>
+                  ))}
+                  <div key='custom' className='flex items-center space-x-2'>
+                    <RadioGroupItem value='Custom' id='Custom' />
+                    <Label htmlFor='Custom'>Custom</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div
+                className={`grid grid-cols-4 items-center gap-4 ${
+                  pricingData != 'Custom' ? 'invisible h-0' : ''
+                }`}
+              >
+                <Label htmlFor='pricing_category' className='text-right'>
+                  Pricing Category
+                </Label>
+                <Input
+                  type='text'
+                  id='pricing_category'
+                  name='pricing_category'
+                  value={pricingCategory}
+                  onChange={(e) => setPricingCategory(e.target.value)}
+                  className='col-span-3'
+                />
+              </div>
+
+              <div
+                className={`grid grid-cols-4 items-center gap-4 ${
+                  pricingData != 'Custom' ? 'invisible h-0' : ''
+                }`}
+              >
+                <Label htmlFor='rate_amount' className='text-right'>
+                  Rate Amount
+                </Label>
+                <Input
+                  type='number'
+                  id='rate_amount'
+                  name='rate_amount'
+                  value={rateAmount}
+                  step={0.01}
+                  min={0}
+                  onChange={(e) => {
+                    setRateAmount(Number(e.target.value));
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setRateAmount(0); // Reset to 0 if the user leaves the field empty
+                    }
+                  }}
+                  className='col-span-3'
+                />
+              </div>
+
               <input
                 type='hidden'
                 name='rounded_length'
@@ -750,18 +875,26 @@ export function DataTable<TData, TValue>({
                     Rounded Length: <strong>{roundedLength}</strong> x Rounded
                     Width: <strong>{roundedWidth}</strong> x Rounded Height:{' '}
                     <strong>{roundedHeight}</strong> x{' '}
-                    {nonMember ? 'Non-Member Cost: ' : 'Member Cost: '}
+                    {`${
+                      pricingData != 'Custom'
+                        ? pricingData?.pricing_category
+                        : pricingData
+                    } Cost: `}
                     <strong>
                       $
-                      {nonMember
-                        ? account.metadata.non_member_cost
-                        : account.metadata.member_cost}
+                      {pricingData != 'Custom'
+                        ? pricingData?.rate_amount
+                        : rateAmount}
                     </strong>{' '}
                     = <strong>${baseCost}</strong>
                     <br />
                     {baseCost < minCost &&
+                      pricingData != 'Custom' &&
+                      pricingData?.enforce_minimum &&
                       'Base cost is less than minimum cost, so minimum cost will be applied.'}
-                    {baseCost < minCost ? (
+                    {baseCost < minCost &&
+                    pricingData != 'Custom' &&
+                    pricingData?.enforce_minimum ? (
                       <>
                         <br />
                         <span>
@@ -787,44 +920,14 @@ export function DataTable<TData, TValue>({
                   id='cost'
                   name='cost'
                   value={
-                    cost < account.metadata.minimum_cost
+                    cost < account.metadata.minimum_cost &&
+                    pricingData != 'Custom' &&
+                    pricingData?.enforce_minimum
                       ? account.metadata.minimum_cost
                       : cost
                   }
                   className='col-span-3'
                   readOnly
-                />
-              </div>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='firing_type' className='text-right'>
-                  Firing Type
-                </Label>
-                <Select
-                  value={firingType}
-                  onValueChange={setFiringType}
-                  name='firing_type'
-                >
-                  <SelectTrigger className='col-span-3'>
-                    <SelectValue placeholder='Firing type' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {account.metadata.firing_types.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='non_member' className='text-right'>
-                  Non Member?
-                </Label>
-                <Checkbox
-                  id='non_member'
-                  name='non_member'
-                  checked={nonMember}
-                  onCheckedChange={handleNonMemberChecked}
                 />
               </div>
               <DialogFooter>

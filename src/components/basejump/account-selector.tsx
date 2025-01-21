@@ -98,7 +98,7 @@ export default function AccountSelector({ className, accountId, onAccountSelecte
                                 </CommandItem>
                             </CommandGroup> */}
                             {Boolean(teamAccounts?.length) && (
-                                <CommandGroup heading="Teams">
+                                <CommandGroup heading="Printers">
                                     {teamAccounts?.map((team) => (
                                         <CommandItem
                                             key={team.account_id}
