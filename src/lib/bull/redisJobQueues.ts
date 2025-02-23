@@ -4,7 +4,7 @@ import RedisSingleton from '@/lib/redis/client';
 const redisJobQueue = new Bull('redisJobQueue', process.env.NEXT_PUBLIC_REDIS_URL!)
 
 const CLEAN_INTERVAL = 60 * 60 * 1000; // 1 hour
-const MAX_JOB_AGE = 48 * 60 * 60 * 1000; // 48 hours
+const MAX_JOB_AGE = 1 * 60 * 60 * 1000; // 48 hours
 
 const cleanQueue = async () => {
   try {
