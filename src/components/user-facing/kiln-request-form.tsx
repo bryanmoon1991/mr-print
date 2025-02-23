@@ -227,23 +227,28 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                   type='number'
                   id='length'
                   name='length'
+                  min={2}
                   value={length}
                   onChange={(e) => {
-                    setLength(Number(e.target.value));
-                    setRoundedLength(
-                      Number(e.target.value) < 2
-                        ? 2
-                        : Math.ceil(Number(e.target.value) * 2) / 2
-                    );
+                    const inputValue = e.target.value;
+                    // If the input is empty, update state as an empty string so the user can type
+                    if (inputValue === '') {
+                      setLength('');
+                      setRoundedLength('');
+                    } else {
+                      const numValue = Number(inputValue);
+                      setLength(numValue);
+                      setRoundedLength(numValue < 2 ? 2 : Math.ceil(numValue * 2) / 2);
+                    }
                   }}
                   onFocus={(e) => {
-                    if (height === 0) {
+                    if (length === 0) {
                       setLength('');
                     }
                   }}
                   onBlur={(e) => {
-                    if (e.target.value === '') {
-                      setLength(0); // Reset to 0 if the user leaves the field empty
+                    if (e.target.value === '' || Number(e.target.value) < 2 ) {
+                      setLength(2); // Reset to 0 if the user leaves the field empty
                     }
                   }}
                   required
@@ -255,23 +260,28 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                   type='number'
                   id='width'
                   name='width'
+                  min={2}
                   value={width}
                   onChange={(e) => {
-                    setWidth(Number(e.target.value));
-                    setRoundedWidth(
-                      Number(e.target.value) < 2
-                        ? 2
-                        : Math.ceil(Number(e.target.value) * 2) / 2
-                    );
+                    const inputValue = e.target.value;
+                    // If the input is empty, update state as an empty string so the user can type
+                    if (inputValue === '') {
+                      setWidth('');
+                      setRoundedWidth('');
+                    } else {
+                      const numValue = Number(inputValue);
+                      setWidth(numValue);
+                      setRoundedWidth(numValue < 2 ? 2 : Math.ceil(numValue * 2) / 2);
+                    }
                   }}
                   onFocus={(e) => {
-                    if (height === 0) {
+                    if (width === 0) {
                       setWidth('');
                     }
                   }}
                   onBlur={(e) => {
-                    if (e.target.value === '') {
-                      setWidth(0); // Reset to 0 if the user leaves the field empty
+                    if (e.target.value === '' || Number(e.target.value) < 2 ) {
+                      setWidth(2); // Reset to 0 if the user leaves the field empty
                     }
                   }}
                   required
@@ -283,14 +293,19 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                   type='number'
                   id='height'
                   name='height'
+                  min={2}
                   value={height}
                   onChange={(e) => {
-                    setHeight(Number(e.target.value));
-                    setRoundedHeight(
-                      Number(e.target.value) < 2
-                        ? 2
-                        : Math.ceil(Number(e.target.value) * 2) / 2
-                    );
+                    const inputValue = e.target.value;
+                    // If the input is empty, update state as an empty string so the user can type
+                    if (inputValue === '') {
+                      setHeight('');
+                      setRoundedHeight('');
+                    } else {
+                      const numValue = Number(inputValue);
+                      setHeight(numValue);
+                      setRoundedHeight(numValue < 2 ? 2 : Math.ceil(numValue * 2) / 2);
+                    }
                   }}
                   onFocus={(e) => {
                     if (height === 0) {
@@ -298,8 +313,8 @@ export default function KilnRequestForm({ metadata }: FormProps) {
                     }
                   }}
                   onBlur={(e) => {
-                    if (e.target.value === '') {
-                      setHeight(0); // Reset to 0 if the user leaves the field empty
+                    if (e.target.value === '' || Number(e.target.value) < 2 ) {
+                      setHeight(2); // Reset to 0 if the user leaves the field empty
                     }
                   }}
                   required
