@@ -1,10 +1,19 @@
 import Bull from 'bull';
 import RedisSingleton from '@/lib/redis/client';
 
-const redisJobQueue = new Bull('redisJobQueue', process.env.NEXT_PUBLIC_REDIS_URL!)
+const redisJobQueue = new Bull(
+  'redisJobQueue',
+  process.env.NEXT_PUBLIC_REDIS_URL!,
+  {
+    defaultJobOptions: {
+      removeOnComplete: 10, // Keep a maximum of 10 completed jobs
+      removeOnFail: 50, // Keep a maximum of 50 failed jobs
+    },
+  }
+);
 
 const CLEAN_INTERVAL = 60 * 60 * 1000; // 1 hour
-const MAX_JOB_AGE = 1 * 60 * 60 * 1000; // 48 hours
+const MAX_JOB_AGE = 24 * 60 * 60 * 1000; // 24 hours
 
 const cleanQueue = async () => {
   try {
@@ -28,13 +37,13 @@ redisJobQueue.process(async (job) => {
   switch (type) {
     case 'add':
       return await RedisSingleton.addJob(accountId, jobData);
-    
+
     case 'remove':
       return await RedisSingleton.removeJob(accountId, jobData, recordId);
-    
+
     case 'get':
       return await RedisSingleton.getJobs(accountId);
-    
+
     default:
       throw new Error('Unknown job type');
   }
