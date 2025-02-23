@@ -1,6 +1,35 @@
 import Redis from 'ioredis';
 import { createAdminClient } from '../supabase/client';
 
+interface Job {
+  id: string;
+  account_id: string;
+  first_name: string;
+  last_name: string;
+  opt_in: boolean;
+  length: number;
+  width: number;
+  height: number;
+  quantity: number;
+  cost: string;
+  firing_type: string;
+  non_member?: null | boolean;
+  photo_url: string;
+  printed: boolean;
+  exported: boolean;
+  updated_at: string;
+  created_at: string;
+  updated_by?: null | string;
+  created_by?: null | string;
+  rounded_length: number;
+  rounded_width: number;
+  rounded_height: number;
+  email: string;
+  pricing_category: string;
+  rate_amount: number;
+}
+
+
 class RedisSingleton {
   private static instance: Redis | null = null;
 
@@ -25,7 +54,7 @@ class RedisSingleton {
   // Remove a specific job after it has been printed (optional, based on job ID or matching condition)
   public static async removeJob(
     accountId: string,
-    jobToRemove: any,
+    jobToRemove: Job,
     recordId: string
   ): Promise<void> {
     const supabase = createAdminClient();
@@ -47,7 +76,10 @@ class RedisSingleton {
   }
 
   //   Add a new print job to the user's list of jobs
-  public static async addJob(accountId: string, job: any): Promise<number> {
+  public static async addJob(accountId: string, job: Job): Promise<number> {
+    if (!job) {
+      throw new Error("Cannot add a null or undefined job.");
+    }
     const redis = RedisSingleton.getInstance();
     const result = await redis.rpush(
       `print_jobs:${accountId}`,
@@ -59,7 +91,7 @@ class RedisSingleton {
 
   public static async jobExists(
     accountId: string,
-    newJob: any
+    newJob: Job
   ): Promise<boolean> {
     const existingJobs = await RedisSingleton.getJobs(accountId);
 

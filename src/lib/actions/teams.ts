@@ -244,6 +244,10 @@ export async function addKilnRequest(prevState: any, formData: FormData) {
     };
   } else {
     const record = data[0];
+    if (data[0] === null) {
+      console.error('Error adding kiln request:', error);
+      console.error('Error on Form Data', formData);
+    }
     const result = await QueueManager.addJob(account_id, record);
 
     // Check if the job was successfully added to the Redis list
